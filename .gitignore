@@ -1,5 +1,7 @@
 # Compiled class file
 *.class
+.env/
+__pycache__/
 
 # Log file
 *.log
