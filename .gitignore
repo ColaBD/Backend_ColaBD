@@ -2,6 +2,7 @@
 *.class
 .env/
 __pycache__/
+SECRETS.py
 
 # Log file
 *.log
