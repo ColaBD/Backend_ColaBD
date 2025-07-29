@@ -1,4 +1,4 @@
-from app.models.dto.compartilhado.response import Response_Generic
+from app.models.dto.compartilhado.response import Response
 from supabase import create_client, Client
 import os
 
@@ -16,10 +16,10 @@ class RepositoryAuth:
       if not data_supabase.data:
         raise Exception("Erro ao criar usuário")
               
-      return Response_Generic("Usuário registrado com sucesso!", True)
+      return Response(data="Usuário registrado com sucesso!", success=True)
     
     except Exception as e:
-      return Response_Generic(str(e), False)
+      return Response(data=str(e), success=False)
 
   async def selectOne(self, user_received) -> dict:
     try: 
@@ -28,7 +28,7 @@ class RepositoryAuth:
       if not data_supabase.data:
         raise Exception("Usuário não encontrado")
         
-      return Response_Generic(data_supabase.data[0], True)
+      return Response(data=data_supabase.data[0], success=True)
     
     except Exception as e:
-      return Response_Generic(str(e), False)
+      return Response(data=str(e), success=False)
