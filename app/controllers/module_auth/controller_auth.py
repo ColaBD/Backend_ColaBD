@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException
 
-from app.models.dto.compartilhado.response import Response_Controller
-from app.models.entities.module_auth.login_auth import LoginAuth
+from app.models.dto.compartilhado.response import Response
+from app.models.dto.module_auth.login_auth import LoginAuth
 from app.services.module_auth.service_auth import ServiceAuth
-from app.models.entities.module_auth.register_auth import RegisterAuth
-from app.models.entities.module_auth.token import Token
+from app.models.dto.module_auth.register_auth import RegisterAuth
+from app.models.entities.module_auth.user import User
+from app.models.dto.module_auth.token import Token
 from app.core.jwt import create_access_token
 
 service_auth = ServiceAuth()
@@ -15,12 +16,19 @@ def http_exception(result, status=500):
 
 @router.post("/register")
 async def register(user_received: RegisterAuth):
-  result = await service_auth.register_service(user_received)
+  try:
+    user = User(name=user_received.name, email=user_received.email, password=user_received.password)
+    
+  except ValueError as e:
+    erro_msg = e.errors()[0]['msg']
+    http_exception(Response(data=erro_msg), 400)
+
+  result = await service_auth.register_service(user)
   
   if (not result.success):
     http_exception(result)
   
-  return Response_Controller(result.data, 200, result.success)
+  return Response(data=result.data, status_code=200, success=result.success)
 
 @router.post("/login")
 async def login(user_received: LoginAuth):
@@ -31,7 +39,7 @@ async def login(user_received: LoginAuth):
     
   token = create_access_token({"email": result.data["email"]})
   
-  return Response_Controller(Token(access_token=token, token_type='Bearer'), 200, True)
+  return Response(data=Token(access_token=token, token_type='Bearer'), status_code=200, success=True)
 
 @router.post("/logout")
 async def login(user_received: LoginAuth):   
