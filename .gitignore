@@ -1,8 +1,8 @@
 # Compiled class file
 *.class
-.env/
+venv/
 __pycache__/
-SECRETS.py
+.env
 
 # Log file
 *.log
