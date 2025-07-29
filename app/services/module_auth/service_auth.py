@@ -1,23 +1,34 @@
-from fastapi import HTTPException
-
 from app.database.module_auth.repository_auth import RepositoryAuth
-from app.core.security import hash_password, verify_password
+from app.core.security import gerar_hash_senha, verificar_hash_senha
+from app.models.dto.compartilhado.response import Response_Generic
 
-repo_user = RepositoryAuth()
+#["atributo"] → quando você está acessando um dicionário (dict)
+#.atributo → quando você está acessando um atributo de uma classe (objeto Python comum)
 
 class ServiceAuth:
-  async def register_service(self, user_auth):
-    user_dict = user_auth.dict()
-    user_dict["password"] = hash_password(user_auth.password)
-    
-    return await repo_user.create(user_dict)
   
-  async def login_service(self, user_received):
-    user = await repo_user.findOne(user_received)
-    if not user:
-      raise HTTPException(status_code=400, detail="Usuário não encontrado")
-
-    if not verify_password(user_received.password, user["password"]):
-      raise HTTPException(status_code=400, detail="Senha inválida")
+  def __init__(self):
+    self.repo_user = RepositoryAuth()
+      
+  async def register_service(self, user_received):
+    user_dict = user_received.dict()
+    user_dict["password"] = gerar_hash_senha(user_received.password)
     
-    return user
+    result_create = await self.repo_user.create(user_dict)
+    
+    return result_create
+    
+  async def login_service(self, user_received):
+    try: 
+      result_selectOne = await self.repo_user.selectOne(user_received)
+  
+      if (result_selectOne.success):
+        equal_password = verificar_hash_senha(user_received.password, result_selectOne.data["password"])
+        
+        if (not equal_password):
+          raise Exception("Senha incorreta")
+      
+      return result_selectOne 
+    
+    except Exception as e:
+      return Response_Generic(str(e), False)

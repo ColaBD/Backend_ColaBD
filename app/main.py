@@ -1,21 +1,20 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pymongo import MongoClient
-from app.core import SECRETS
-
 from app.controllers.module_auth.controller_auth import router as user_route
 
 import logging
 
-connectionString = SECRETS.CONNECTION
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('    ')
 
 app = FastAPI( 
   title="ColaBD API",
   description="API para o desenvolvimento do ColaBD",
-  version="0.0.1",
+  version="1.0.0",
 )
 
 origins = [
@@ -31,18 +30,13 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
+# ---- Endpoints da aplicação ----
 app.include_router(user_route)
+# --------------------------------
 
 @app.on_event("startup")
 async def iniciandoAPP():
   logger.info("Iniciando Aplicação...")
-  client = MongoClient(connectionString)
-
-  try:
-    client.admin.command('ping')
-    logger.info("Pinged your deployment. You successfully connected to MongoDB!")
-  except Exception as e:
-    logger.error(e)
 
 @app.on_event("shutdown")
 async def encerrandoAPP():
