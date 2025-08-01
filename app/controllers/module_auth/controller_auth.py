@@ -41,10 +41,8 @@ async def login(user_received: LoginAuth):
   if (not result.success):
     http_exception(result, 400)
 
-  userInfo = create_access_token(result.data)
-  # token = create_access_token({"email": result.data["email"]})
-  return userInfo
+  return create_access_token(result.data)
 
-@router.post("/logout")
+@router.post("/logout", tags=["Autenticação"])
 async def logout(user_received: LoginAuth):   
   return True
