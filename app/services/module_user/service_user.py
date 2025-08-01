@@ -1,14 +1,15 @@
-from app.database.module_auth.repository_auth import RepositoryAuth
+from app.database.module_user.repository_user import RepositoryUser
 from app.core.security import gerar_hash_senha, verificar_hash_senha
 from app.models.dto.compartilhado.response import Response
 
-#["atributo"] → quando você está acessando um dicionário (dict)
-#.atributo → quando você está acessando um atributo de uma classe (objeto Python comum)
+# ["atributo"] → quando você está acessando um dicionário (dict)
+# .atributo → quando você está acessando um atributo de uma classe (objeto Python comum)
+# os results do repositorio são da classe Response
 
 class ServiceAuth:
   
   def __init__(self):
-    self.repo_user = RepositoryAuth()
+    self.repo_user = RepositoryUser()
       
   async def register_service(self, user_received):
     user_dict = user_received.dict()

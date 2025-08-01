@@ -2,10 +2,10 @@ from app.models.dto.compartilhado.response import Response
 from supabase import create_client, Client
 import os
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
-class RepositoryAuth:
+class RepositoryUser:
   def __init__(self):
     self.supabase: Client = create_client(os.getenv('CONNECTION_POSTGRES_SUPABASE'), os.getenv('SECRET_KEY_POSTGRES_SUPABASE'))
 
