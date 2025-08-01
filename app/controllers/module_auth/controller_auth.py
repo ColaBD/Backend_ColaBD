@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.models.dto.compartilhado.response import Response
+from app.models.dto.module_auth.infoAuth import InfoAuth
 from app.models.dto.module_auth.login_auth import LoginAuth
 from app.services.module_user.service_user import ServiceAuth
 from app.models.dto.module_auth.register_auth import RegisterAuth
@@ -14,9 +15,10 @@ service_user = ServiceAuth()
 router = APIRouter()
 
 def http_exception(result, status=500):
-  raise HTTPException(detail=result.data, status_code=status)
+    raise HTTPException(detail=result.data, status_code=status)
 
-@router.post("/register")
+
+@router.post("/register", response_model=Response)
 async def register(user_received: RegisterAuth):
   try:
     user = User(name=user_received.name, email=user_received.email, password=user_received.password)
@@ -32,7 +34,7 @@ async def register(user_received: RegisterAuth):
   
   return Response(data=result.data, status_code=200, success=result.success)
 
-@router.post("/login")
+@router.post("/login", response_model=InfoAuth)
 async def login(user_received: LoginAuth):
   result = await service_user.login_service(user_received) 
   
@@ -44,5 +46,5 @@ async def login(user_received: LoginAuth):
   return Response(data=userInfo, status_code=200, success=True)
 
 @router.post("/logout")
-async def login(user_received: LoginAuth):   
+async def logout(user_received: LoginAuth):   
   return True

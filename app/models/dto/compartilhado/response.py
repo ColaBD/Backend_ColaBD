@@ -1,5 +1,7 @@
-class Response:
-  def __init__(self, data, status_code=000, success=False):
-    self.data = data
-    self.status_code = status_code
-    self.success = success
+from pydantic import BaseModel
+from typing import Any
+
+class Response(BaseModel):
+  data: Any
+  status_code: int
+  success: bool
