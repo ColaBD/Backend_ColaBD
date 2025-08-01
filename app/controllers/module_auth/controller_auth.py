@@ -32,7 +32,7 @@ async def register(user_received: RegisterAuth):
   if (not result.success):
     http_exception(result)
   
-  return Response(data=result.data, status_code=200, success=result.success)
+  return result.data
 
 @router.post("/auth/login", response_model=InfoAuth, tags=["Autenticação"])
 async def login(user_received: LoginAuth):
@@ -43,7 +43,7 @@ async def login(user_received: LoginAuth):
 
   userInfo = create_access_token(result.data)
   # token = create_access_token({"email": result.data["email"]})
-  return Response(data=userInfo, status_code=200, success=True)
+  return userInfo
 
 @router.post("/logout")
 async def logout(user_received: LoginAuth):   
