@@ -43,6 +43,6 @@ async def login(user_received: LoginAuth):
 
   return create_access_token(result.data)
 
-@router.post("/logout", tags=["Autenticação"])
+@router.post("/auth/logout", tags=["Autenticação"])
 async def logout(user_received: LoginAuth):   
   return True
