@@ -30,7 +30,7 @@ async def register(user_received: RegisterAuth):
   
   return Response(data=result.data, status_code=200, success=True)
 
-@router.post("/auth/login", response_model=InfoAuth, tags=["Autenticação"])
+@router.post("/auth/login", response_model=Response, tags=["Autenticação"])
 async def login(user_received: LoginAuth):
   result = await service_user.login_service(user_received) 
   if (not result.success):
@@ -40,4 +40,4 @@ async def login(user_received: LoginAuth):
   if (not result_jwt.success):
     http_exception(result, 400)
 
-  return Response(data=result_jwt, status_code=200, success=True)
+  return Response(data=result_jwt.data, status_code=200, success=True)
