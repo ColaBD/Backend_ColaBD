@@ -18,7 +18,7 @@ def http_exception(result, status=500):
     raise HTTPException(detail=result.data, status_code=status)
 
 
-@router.post("/register", response_model=Response)
+@router.post("/auth/register", response_model=Response, tags=["Autenticação"])
 async def register(user_received: RegisterAuth):
   try:
     user = User(name=user_received.name, email=user_received.email, password=user_received.password)
@@ -34,7 +34,7 @@ async def register(user_received: RegisterAuth):
   
   return Response(data=result.data, status_code=200, success=result.success)
 
-@router.post("/login", response_model=InfoAuth)
+@router.post("/auth/login", response_model=InfoAuth, tags=["Autenticação"])
 async def login(user_received: LoginAuth):
   result = await service_user.login_service(user_received) 
   
