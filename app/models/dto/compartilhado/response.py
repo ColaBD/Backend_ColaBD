@@ -3,5 +3,5 @@ from typing import Any
 
 class Response(BaseModel):
   data: Any
-  status_code: int
-  success: bool
+  status_code: int = 200
+  success: bool = False
