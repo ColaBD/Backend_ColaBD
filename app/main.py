@@ -18,6 +18,7 @@ app = FastAPI(
 )
 
 origins = [
+  "http://localhost:4200",
   "https://colabd.onrender.com"
 ]
 
