@@ -93,3 +93,41 @@ class RepositorySchema:
         
         except Exception as e:
             return Response(data=str(e), success=False)
+
+    async def update_schema_database_model(self, schema_id: str, database_model_id: str) -> Response:
+        """Update schema with database_model ID."""
+        try:
+            supabase = self._get_supabase_client()
+            data_supabase = supabase.table("schema").update({
+                "database_model": database_model_id,
+                "updated_at": "now()"
+            }).eq("id", schema_id).execute()
+            
+            if not data_supabase.data:
+                raise Exception("Erro ao atualizar schema com database_model")
+            
+            return Response(data=data_supabase.data[0], success=True)
+        
+        except Exception as e:
+            error_message = str(e)
+            if "invalid input syntax for type uuid" in error_message:
+                return Response(
+                    data="Erro: O campo database_model no banco de dados está configurado como UUID, mas está recebendo um ObjectId do MongoDB. "
+                         "O campo precisa ser alterado para TEXT/VARCHAR no banco de dados, ou o valor precisa ser convertido para UUID.",
+                    success=False
+                )
+            return Response(data=str(e), success=False)
+
+    async def get_schema_by_id(self, schema_id: str) -> Response:
+        """Get a schema by its ID."""
+        try:
+            supabase = self._get_supabase_client()
+            data_supabase = supabase.table("schema").select("*").eq("id", schema_id).execute()
+            
+            if not data_supabase.data:
+                raise Exception("Schema não encontrado")
+            
+            return Response(data=data_supabase.data[0], success=True)
+        
+        except Exception as e:
+            return Response(data=str(e), success=False)
