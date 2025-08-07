@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers.module_auth.controller_auth import router as user_route
+from app.database.common.database_manager import db_manager
 
 import logging
 
@@ -37,13 +38,17 @@ app.include_router(user_route)
 @app.on_event("startup")
 async def iniciandoAPP():
   logger.info("Iniciando Aplicação...")
+  await db_manager.initialize()
+  logger.info("Aplicação iniciada com sucesso!")
 
 @app.on_event("shutdown")
 async def encerrandoAPP():
   logger.info("Encerrando Aplicação...")
+  await db_manager.close_connections()
+  logger.info("Aplicação encerrada com sucesso!")
 
 @app.get('/', include_in_schema=False)
 async def docs():
-  logger.info('redirencionando para o swagger')
+  logger.info('redirecionando para o swagger')
   return RedirectResponse(url="/docs")
 

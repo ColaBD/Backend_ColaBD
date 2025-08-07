@@ -22,11 +22,11 @@ def create_access_token(data: dict):
 def decode_access_token(token: str): # -> necessário para futuros metodos que precisam saber quem é o usuario
   try:
     payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[ALGORITHM])
-    # user_id = payload.get("id")
-    # user_email = payload.get("email")
+    user_id = payload.get("id")
+    user_email = payload.get("email")
     
-    # if (user_email is None or user_id is None):
-    #   raise Exception("Token inválido")
+    if (user_email is None or user_id is None):
+      raise Exception("Token inválido")
     
     return Response(data=payload, success=True)
 

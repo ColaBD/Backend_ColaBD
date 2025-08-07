@@ -1,17 +1,24 @@
 from app.models.dto.compartilhado.response import Response
-from supabase import create_client, Client
-import os
+from app.database.common.supabase_client import get_supabase_client
+from supabase import Client
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
 class RepositoryUser:
   def __init__(self):
-    self.supabase: Client = create_client(os.getenv('CONNECTION_POSTGRES_SUPABASE'), os.getenv('SECRET_KEY_POSTGRES_SUPABASE'))
+    self.supabase: Client = None
+  
+  def _get_supabase_client(self) -> Client:
+    """Get Supabase client, initializing if needed."""
+    if self.supabase is None:
+      self.supabase = get_supabase_client()
+    return self.supabase
 
   async def create(self, user_received: dict) -> str:
     try:
-      data_supabase = self.supabase.table("user").insert(user_received).execute()
+      supabase = self._get_supabase_client()
+      data_supabase = supabase.table("user").insert(user_received).execute()
       
       if not data_supabase.data:
         raise Exception("Erro ao criar usuário")
@@ -23,7 +30,8 @@ class RepositoryUser:
 
   async def selectOne(self, user_received) -> dict:
     try: 
-      data_supabase = self.supabase.table('user').select('*').eq("email", user_received.email).limit(1).execute()
+      supabase = self._get_supabase_client()
+      data_supabase = supabase.table('user').select('*').eq("email", user_received.email).limit(1).execute()
       
       if not data_supabase.data:
         raise Exception("Usuário não encontrado")

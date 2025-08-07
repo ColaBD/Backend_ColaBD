@@ -28,7 +28,7 @@ async def register(user_received: RegisterAuth):
   if (not result.success):
     http_exception(result)
   
-  return Response(data=result.data, status_code=200, success=True)
+  return Response(data=result.data, status_code=201, success=True)
 
 @router.post("/auth/login", response_model=Response, tags=["Autenticação"])
 async def login(user_received: LoginAuth):
