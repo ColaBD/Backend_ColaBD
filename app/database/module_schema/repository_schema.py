@@ -2,22 +2,27 @@ from typing import List
 from app.models.dto.compartilhado.response import Response
 from app.database.common.supabase_client import get_supabase_client
 from supabase import Client
+from fastapi import UploadFile
+import io
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
 
 class RepositorySchema:
+    """Repository for managing schema and user_schema table operations."""
     
     def __init__(self):
         self.supabase: Client = None
     
     def _get_supabase_client(self) -> Client:
+        """Get Supabase client, initializing if needed."""
         if self.supabase is None:
             self.supabase = get_supabase_client()
         return self.supabase
 
     async def get_all(self) -> Response:
+        """Get all user schema associations."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").execute()
@@ -28,6 +33,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create(self, schema_data: dict) -> Response:
+        """Create a new user schema association."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").insert(schema_data).execute()
@@ -41,6 +47,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_by_user_id(self, user_id: str) -> Response:
+        """Get all schemas for a specific user."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").eq("user_id", user_id).execute()
@@ -51,6 +58,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_by_schema_id(self, schema_id: str) -> Response:
+        """Get all users for a specific schema."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").eq("schema_id", schema_id).execute()
@@ -61,6 +69,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create_schema(self, schema_data: dict) -> Response:
+        """Create a new schema in the schema table."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").insert(schema_data).execute()
@@ -74,6 +83,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create_user_schema(self, user_schema_data: dict) -> Response:
+        """Create a new user schema association."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").insert(user_schema_data).execute()
@@ -87,6 +97,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def update_schema_database_model(self, schema_id: str, database_model_id: str) -> Response:
+        """Update schema with database_model ID."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").update({
@@ -110,12 +121,179 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_schema_by_id(self, schema_id: str) -> Response:
+        """Get a schema by its ID."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").select("*").eq("id", schema_id).execute()
             
             if not data_supabase.data:
                 raise Exception("Schema não encontrado")
+            
+            return Response(data=data_supabase.data[0], success=True)
+        
+        except Exception as e:
+            return Response(data=str(e), success=False)
+
+    async def get_schemas_by_ids(self, schema_ids: list) -> Response:
+        """Get multiple schemas by their IDs in one query (optimized)."""
+        try:
+            if not schema_ids:
+                return Response(data=[], success=True)
+            
+            supabase = self._get_supabase_client()
+            
+            # Use 'in' filter for batch query
+            data_supabase = supabase.table("schema").select("*").in_("id", schema_ids).execute()
+            
+            return Response(data=data_supabase.data or [], success=True)
+        
+        except Exception as e:
+            return Response(data=str(e), success=False)
+
+    async def upload_schema_image(self, schema_id: str, image_file: UploadFile) -> Response:
+        """Upload schema image to Supabase storage bucket."""
+        try:
+            import logging
+            import os
+            from supabase import create_client
+            logger = logging.getLogger(__name__)
+            
+            logger.info(f"Repository: Starting image upload for schema {schema_id}")
+            logger.info(f"Repository: Image file - name: {image_file.filename}, type: {image_file.content_type}, size: {image_file.size}")
+            
+            # Use bucket-specific key for storage operations
+            connection_url = os.getenv('CONNECTION_POSTGRES_SUPABASE')
+            bucket_key = os.getenv('SECRET_SUPABASE_BUCKET')
+            
+            if not bucket_key:
+                logger.error("SECRET_SUPABASE_BUCKET environment variable not found")
+                return Response(data="Configuração de bucket não encontrada", success=False)
+            
+            logger.info("Repository: Using bucket-specific key for upload")
+            supabase = create_client(connection_url, bucket_key)
+            
+            # Validate file size (limit to 10MB)
+            if image_file.size and image_file.size > 10 * 1024 * 1024:
+                return Response(data="Arquivo muito grande. Máximo permitido: 10MB", success=False)
+            
+            # Read file content
+            logger.info("Repository: Reading file content...")
+            file_content = await image_file.read()
+            logger.info(f"Repository: File content read successfully, size: {len(file_content)} bytes")
+            
+            # Reset file pointer for potential future reads
+            await image_file.seek(0)
+            
+            # Determine file extension based on content type
+            extension = "png"
+            if image_file.content_type:
+                if "jpeg" in image_file.content_type or "jpg" in image_file.content_type:
+                    extension = "jpg"
+                elif "gif" in image_file.content_type:
+                    extension = "gif"
+                elif "webp" in image_file.content_type:
+                    extension = "webp"
+            
+            # Upload to schemas-storage bucket with schema_id as filename
+            file_path = f"{schema_id}.{extension}"
+            logger.info(f"Repository: Uploading to path: {file_path}")
+            
+            upload_response = supabase.storage.from_("schemas-storage").upload(
+                path=file_path,
+                file=file_content,
+                file_options={
+                    "content-type": image_file.content_type or "image/png",
+                    "upsert": "true"  # String instead of boolean - Supabase expects string
+                }
+            )
+            
+            logger.info(f"Repository: Upload response received: {type(upload_response)}")
+            
+            # Check for errors in different response formats
+            if hasattr(upload_response, 'error') and upload_response.error:
+                logger.error(f"Repository: Upload error (hasattr): {upload_response.error}")
+                raise Exception(f"Erro no upload da imagem: {upload_response.error}")
+            
+            # Some Supabase clients return dict with error key
+            if isinstance(upload_response, dict) and upload_response.get('error'):
+                logger.error(f"Repository: Upload error (dict): {upload_response['error']}")
+                raise Exception(f"Erro no upload da imagem: {upload_response['error']}")
+            
+            logger.info("Repository: Image uploaded successfully")
+            return Response(data={"file_path": file_path, "message": "Imagem enviada com sucesso"}, success=True)
+        
+        except Exception as e:
+            logger.error(f"Repository: Upload failed with exception: {str(e)}")
+            return Response(data=str(e), success=False)
+
+    async def get_schema_image_signed_url(self, schema_id: str) -> Response:
+        """Get signed URL for schema image from Supabase storage."""
+        try:
+            import logging
+            import os
+            from supabase import create_client
+            logger = logging.getLogger(__name__)
+            
+            # Use bucket-specific key for storage operations
+            connection_url = os.getenv('CONNECTION_POSTGRES_SUPABASE')
+            bucket_key = os.getenv('SECRET_SUPABASE_BUCKET')
+            
+            if not bucket_key:
+                logger.error("SECRET_SUPABASE_BUCKET environment variable not found")
+                return Response(data="Configuração de bucket não encontrada", success=False)
+            
+            supabase = create_client(connection_url, bucket_key)
+            
+            # Try most common extensions first for speed
+            extensions = ["png", "jpg"]  # Only try most common extensions for speed
+            
+            for extension in extensions:
+                file_path = f"{schema_id}.{extension}"
+                
+                try:
+                    # Generate signed URL valid for 1 hour (3600 seconds)
+                    signed_url_response = supabase.storage.from_("schemas-storage").create_signed_url(
+                        path=file_path,
+                        expires_in=3600
+                    )
+                    
+                    # Check if request was successful
+                    if hasattr(signed_url_response, 'error') and signed_url_response.error:
+                        if "not found" in str(signed_url_response.error).lower():
+                            continue  # Try next extension
+                        continue  # Skip other errors for speed
+                    
+                    # Some clients return dict with error
+                    if isinstance(signed_url_response, dict) and signed_url_response.get('error'):
+                        if "not found" in str(signed_url_response['error']).lower():
+                            continue  # Try next extension
+                        continue  # Skip other errors for speed
+                    
+                    signed_url = signed_url_response.get('signedURL') or signed_url_response.get('signed_url')
+                    if signed_url:
+                        return Response(data=signed_url, success=True)
+                        
+                except Exception as e:
+                    continue  # Skip errors for speed
+            
+            # No file found - return None quickly
+            return Response(data=None, success=True)
+        
+        except Exception as e:
+            logger.error(f"Repository: Error getting signed URL: {str(e)}")
+            return Response(data=str(e), success=False)
+
+    async def update_schema_display_picture(self, schema_id: str, display_picture_url: str) -> Response:
+        """Update schema display_picture field."""
+        try:
+            supabase = self._get_supabase_client()
+            data_supabase = supabase.table("schema").update({
+                "display_picture": display_picture_url,
+                "updated_at": "now()"
+            }).eq("id", schema_id).execute()
+            
+            if not data_supabase.data:
+                raise Exception("Erro ao atualizar display_picture do schema")
             
             return Response(data=data_supabase.data[0], success=True)
         
