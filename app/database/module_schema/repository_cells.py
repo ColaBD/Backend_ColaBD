@@ -12,29 +12,16 @@ logger = logging.getLogger(__name__)
 
 
 class RepositoryCells:
-    """
-    Repository class for managing cells data in MongoDB models collection.
-    """
 
     def __init__(self):
         self.collection: Collection = None
 
     def _get_collection(self) -> Collection:
-        """Get MongoDB collection, initializing if needed."""
         if self.collection is None:
             self.collection = get_collection('models')  # Changed from 'cells' to 'models'
         return self.collection
 
     async def create_cells(self, cells_data: Dict[str, Any]) -> Response:
-        """
-        Create a new cells document in the MongoDB models collection.
-        
-        Args:
-            cells_data: Dictionary containing cells data
-            
-        Returns:
-            Response object with success status and the MongoDB document ID
-        """
         try:
             # Create cells model with timestamps
             cells_model = CellsModel(**cells_data)
@@ -57,15 +44,6 @@ class RepositoryCells:
             return Response(data=str(e), success=False)
 
     async def get_cells_by_id(self, cells_id: str) -> Response:
-        """
-        Get cells document by its MongoDB ID from models collection.
-        
-        Args:
-            cells_id: String representation of the MongoDB document ID
-            
-        Returns:
-            Response object with cells data
-        """
         try:
             object_id = ObjectId(cells_id)
             
@@ -85,16 +63,6 @@ class RepositoryCells:
             return Response(data=str(e), success=False)
 
     async def update_cells_by_id(self, cells_id: str, cells_data: Dict[str, Any]) -> Response:
-        """
-        Update cells document by its MongoDB ID in models collection.
-        
-        Args:
-            cells_id: String representation of the MongoDB document ID
-            cells_data: Dictionary containing updated cells data
-            
-        Returns:
-            Response object with success status
-        """
         try:
             object_id = ObjectId(cells_id)
             

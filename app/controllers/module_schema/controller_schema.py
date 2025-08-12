@@ -17,13 +17,11 @@ service_schema = ServiceSchema()
 
 
 def http_exception(result, status=500):
-    """Helper function to raise HTTP exceptions."""
     raise HTTPException(detail=result.data, status_code=status)
 
 
 @router.get("/", response_model=Response)
 async def get_all_schemas(current_user_id: str = Depends(get_current_user_id)):
-    """Get all schemas for the authenticated user."""
     result = await service_schema.get_schemas_by_user(current_user_id)
     
     if not result.success:
@@ -34,7 +32,6 @@ async def get_all_schemas(current_user_id: str = Depends(get_current_user_id)):
 
 @router.post("/", response_model=Response)
 async def create_schema(schema_data: CreateSchema, current_user_id: str = Depends(get_current_user_id)):
-    """Create a new schema and associate it with the authenticated user."""
     result = await service_schema.create_schema(schema_data, current_user_id)
     
     if not result.success:
@@ -45,7 +42,6 @@ async def create_schema(schema_data: CreateSchema, current_user_id: str = Depend
 
 @router.put("/", response_model=Response)
 async def update_schema(update_data: UpdateSchema, current_user_id: str = Depends(get_current_user_id)):
-    """Update a schema with cells data and save to MongoDB."""
     result = await service_schema.update_schema(update_data, current_user_id)
     
     if not result.success:
@@ -56,7 +52,6 @@ async def update_schema(update_data: UpdateSchema, current_user_id: str = Depend
 
 @router.get("/{schema_id}", response_model=Response)
 async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Get schema by ID with cells data from MongoDB."""
     result = await service_schema.get_schema_with_cells(schema_id, current_user_id)
     
     if not result.success:
@@ -67,7 +62,6 @@ async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_cu
 
 @router.get("/user/{user_id}", response_model=Response)
 async def get_schemas_by_user(user_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Get all schemas for a specific user (admin endpoint)."""
     if user_id != current_user_id:
         raise HTTPException(status_code=403, detail="Acesso negado: você só pode acessar seus próprios schemas")
     

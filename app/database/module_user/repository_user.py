@@ -10,7 +10,6 @@ class RepositoryUser:
     self.supabase: Client = None
   
   def _get_supabase_client(self) -> Client:
-    """Get Supabase client, initializing if needed."""
     if self.supabase is None:
       self.supabase = get_supabase_client()
     return self.supabase

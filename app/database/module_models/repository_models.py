@@ -9,24 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class RepositoryModels:
-    """
-    Repository class for managing the 'models' collection in MongoDB.
-    Uses standard PyMongo client for database operations.
-    """
 
     def __init__(self):
         self.collection = get_collection('models')
 
     async def create(self, model_data: Dict[str, Any]) -> Response:
-        """
-        Create a new model document in the collection.
-        
-        Args:
-            model_data: Dictionary containing model data
-            
-        Returns:
-            Response object with success status and data
-        """
         try:
             result = self.collection.insert_one(model_data)
             
@@ -47,15 +34,6 @@ class RepositoryModels:
             return Response(data=str(e), success=False)
 
     async def find_by_id(self, model_id: str) -> Response:
-        """
-        Find a model document by its ID.
-        
-        Args:
-            model_id: String representation of the model ID
-            
-        Returns:
-            Response object with the found model or error
-        """
         try:
             object_id = ObjectId(model_id)
             model = self.collection.find_one({"_id": object_id})
@@ -72,16 +50,6 @@ class RepositoryModels:
             return Response(data=str(e), success=False)
 
     async def find_all(self, limit: Optional[int] = None, skip: Optional[int] = None) -> Response:
-        """
-        Find all model documents with optional pagination.
-        
-        Args:
-            limit: Maximum number of documents to return
-            skip: Number of documents to skip
-            
-        Returns:
-            Response object with list of models
-        """
         try:
             cursor = self.collection.find()
             
@@ -103,16 +71,6 @@ class RepositoryModels:
             return Response(data=str(e), success=False)
 
     async def update_by_id(self, model_id: str, update_data: Dict[str, Any]) -> Response:
-        """
-        Update a model document by its ID.
-        
-        Args:
-            model_id: String representation of the model ID
-            update_data: Dictionary containing fields to update
-            
-        Returns:
-            Response object with success status and updated data
-        """
         try:
             object_id = ObjectId(model_id)
             
@@ -138,15 +96,6 @@ class RepositoryModels:
             return Response(data=str(e), success=False)
 
     async def delete_by_id(self, model_id: str) -> Response:
-        """
-        Delete a model document by its ID.
-        
-        Args:
-            model_id: String representation of the model ID
-            
-        Returns:
-            Response object with success status
-        """
         try:
             object_id = ObjectId(model_id)
             
@@ -162,16 +111,6 @@ class RepositoryModels:
             return Response(data=str(e), success=False)
 
     async def find_by_criteria(self, criteria: Dict[str, Any], limit: Optional[int] = None) -> Response:
-        """
-        Find model documents matching specific criteria.
-        
-        Args:
-            criteria: Dictionary containing search criteria
-            limit: Maximum number of documents to return
-            
-        Returns:
-            Response object with matching models
-        """
         try:
             cursor = self.collection.find(criteria)
             

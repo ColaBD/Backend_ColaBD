@@ -12,7 +12,10 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 service_user = ServiceAuth()
-router = APIRouter()
+router = APIRouter(
+  prefix="/auth",
+  tags=["Autenticação"]
+)
 
 # router = APIRouter(dependencies=[Depends(decode_access_token (metodo do jwt.py))]) # -> Serve para proteger todas as rotas dentro do router
 # no jwt já é possível pegar o id e nome (coisas que foram necessárias para gerar o jwt)
@@ -20,7 +23,7 @@ router = APIRouter()
 def http_exception(result, status=500):
   raise HTTPException(detail=result.data, status_code=status)
 
-@router.post("/auth/register", response_model=Response, tags=["Autenticação"])
+@router.post("/register", response_model=Response)
 async def register(user_received: RegisterAuth):
   user = User(name=user_received.name, email=user_received.email, password=user_received.password)
   result = await service_user.register_service(user)
@@ -30,7 +33,7 @@ async def register(user_received: RegisterAuth):
   
   return Response(data=result.data, status_code=201, success=True)
 
-@router.post("/auth/login", response_model=Response, tags=["Autenticação"])
+@router.post("/login", response_model=Response)
 async def login(user_received: LoginAuth):
   result = await service_user.login_service(user_received) 
   if (not result.success):

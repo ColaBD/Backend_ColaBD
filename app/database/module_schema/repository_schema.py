@@ -8,19 +8,16 @@ from supabase import Client
 
 
 class RepositorySchema:
-    """Repository for managing schema and user_schema table operations."""
     
     def __init__(self):
         self.supabase: Client = None
     
     def _get_supabase_client(self) -> Client:
-        """Get Supabase client, initializing if needed."""
         if self.supabase is None:
             self.supabase = get_supabase_client()
         return self.supabase
 
     async def get_all(self) -> Response:
-        """Get all user schema associations."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").execute()
@@ -31,7 +28,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create(self, schema_data: dict) -> Response:
-        """Create a new user schema association."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").insert(schema_data).execute()
@@ -45,7 +41,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_by_user_id(self, user_id: str) -> Response:
-        """Get all schemas for a specific user."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").eq("user_id", user_id).execute()
@@ -56,7 +51,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_by_schema_id(self, schema_id: str) -> Response:
-        """Get all users for a specific schema."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").eq("schema_id", schema_id).execute()
@@ -67,7 +61,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create_schema(self, schema_data: dict) -> Response:
-        """Create a new schema in the schema table."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").insert(schema_data).execute()
@@ -81,7 +74,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create_user_schema(self, user_schema_data: dict) -> Response:
-        """Create a new user schema association."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").insert(user_schema_data).execute()
@@ -95,7 +87,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def update_schema_database_model(self, schema_id: str, database_model_id: str) -> Response:
-        """Update schema with database_model ID."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").update({
@@ -119,7 +110,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_schema_by_id(self, schema_id: str) -> Response:
-        """Get a schema by its ID."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").select("*").eq("id", schema_id).execute()

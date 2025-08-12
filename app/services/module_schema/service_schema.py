@@ -5,14 +5,12 @@ from app.models.dto.compartilhado.response import Response
 
 
 class ServiceSchema:
-    """Service layer for schema business logic."""
     
     def __init__(self):
         self.repo_schema = RepositorySchema()
         self.repo_cells = RepositoryCells()
     
     async def get_all_schemas(self) -> Response:
-        """Get all user schema associations."""
         try:
             result = await self.repo_schema.get_all()
             return result
@@ -20,7 +18,6 @@ class ServiceSchema:
             return Response(data=str(e), success=False)
     
     async def create_schema(self, create_schema_data, user_id: str) -> Response:
-        """Create a new schema and associate it with the user."""
         try:
             # Step 1: Create the schema in the schema table
             schema_id = str(uuid.uuid4())
@@ -65,7 +62,6 @@ class ServiceSchema:
             return Response(data=str(e), success=False)
     
     async def get_schemas_by_user(self, user_id: str) -> Response:
-        """Get all schemas for a specific user."""
         try:
             result = await self.repo_schema.get_by_user_id(user_id)
             return result
@@ -73,7 +69,6 @@ class ServiceSchema:
             return Response(data=str(e), success=False)
     
     async def update_schema(self, update_schema_data, current_user_id: str) -> Response:
-        """Update a schema with cells data and save cells to MongoDB."""
         try:
             schema_id = update_schema_data.schema_id
             cells_data = {"cells": update_schema_data.cells}
@@ -119,7 +114,6 @@ class ServiceSchema:
             return Response(data=str(e), success=False)
 
     async def get_schema_with_cells(self, schema_id: str, current_user_id: str) -> Response:
-        """Get schema by ID with cells data from MongoDB."""
         try:
             # Step 1: Verify if the schema exists
             schema_result = await self.repo_schema.get_schema_by_id(schema_id)
