@@ -27,7 +27,7 @@ class ServiceAuth:
         equal_password = verificar_hash_senha(user_received.password, result_selectOne.data["password"])
         
         if (not equal_password):
-          raise Exception("Senha incorreta")
+          raise Exception("Senha ou E-mail incorretos")
       
       return result_selectOne 
     
