@@ -33,7 +33,7 @@ class RepositoryUser:
       data_supabase = supabase.table('user').select('*').eq("email", user_received.email).limit(1).execute()
       
       if not data_supabase.data:
-        raise Exception("Usuário não encontrado")
+        raise Exception("Senha ou E-mail incorretos")
         
       return Response(data=data_supabase.data[0], success=True)
     
