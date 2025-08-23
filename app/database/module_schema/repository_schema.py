@@ -1,28 +1,23 @@
-from typing import List
 from app.models.dto.compartilhado.response import Response
 from app.database.common.supabase_client import get_supabase_client
 from supabase import Client
 from fastapi import UploadFile
-import io
+from supabase import create_client
+import logging
+import os
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
-
+logger = logging.getLogger(__name__)
 
 class RepositorySchema:
-    """Repository for managing schema and user_schema table operations."""
-    
     def __init__(self):
         self.supabase: Client = None
     
     def _get_supabase_client(self) -> Client:
-        """Get Supabase client, initializing if needed."""
         if self.supabase is None:
             self.supabase = get_supabase_client()
         return self.supabase
 
     async def get_all(self) -> Response:
-        """Get all user schema associations."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").execute()
@@ -33,7 +28,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create(self, schema_data: dict) -> Response:
-        """Create a new user schema association."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").insert(schema_data).execute()
@@ -47,7 +41,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_by_user_id(self, user_id: str) -> Response:
-        """Get all schemas for a specific user."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").eq("user_id", user_id).execute()
@@ -58,7 +51,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_by_schema_id(self, schema_id: str) -> Response:
-        """Get all users for a specific schema."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").select("*").eq("schema_id", schema_id).execute()
@@ -69,7 +61,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create_schema(self, schema_data: dict) -> Response:
-        """Create a new schema in the schema table."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").insert(schema_data).execute()
@@ -83,7 +74,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def create_user_schema(self, user_schema_data: dict) -> Response:
-        """Create a new user schema association."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("user_schema").insert(user_schema_data).execute()
@@ -97,7 +87,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def update_schema_database_model(self, schema_id: str, database_model_id: str) -> Response:
-        """Update schema with database_model ID."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").update({
@@ -121,7 +110,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_schema_by_id(self, schema_id: str) -> Response:
-        """Get a schema by its ID."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").select("*").eq("id", schema_id).execute()
@@ -135,7 +123,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_schemas_by_ids(self, schema_ids: list) -> Response:
-        """Get multiple schemas by their IDs in one query (optimized)."""
         try:
             if not schema_ids:
                 return Response(data=[], success=True)
@@ -151,13 +138,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def upload_schema_image(self, schema_id: str, image_file: UploadFile) -> Response:
-        """Upload schema image to Supabase storage bucket."""
-        try:
-            import logging
-            import os
-            from supabase import create_client
-            logger = logging.getLogger(__name__)
-            
+        try:           
             logger.info(f"Repository: Starting image upload for schema {schema_id}")
             logger.info(f"Repository: Image file - name: {image_file.filename}, type: {image_file.content_type}, size: {image_file.size}")
             
@@ -227,13 +208,7 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def get_schema_image_signed_url(self, schema_id: str) -> Response:
-        """Get signed URL for schema image from Supabase storage."""
         try:
-            import logging
-            import os
-            from supabase import create_client
-            logger = logging.getLogger(__name__)
-            
             # Use bucket-specific key for storage operations
             connection_url = os.getenv('CONNECTION_POSTGRES_SUPABASE')
             bucket_key = os.getenv('SECRET_SUPABASE_BUCKET')
@@ -260,23 +235,22 @@ class RepositorySchema:
                     # Check if request was successful
                     if hasattr(signed_url_response, 'error') and signed_url_response.error:
                         if "not found" in str(signed_url_response.error).lower():
-                            continue  # Try next extension
-                        continue  # Skip other errors for speed
+                            continue  
+                        continue  
                     
                     # Some clients return dict with error
                     if isinstance(signed_url_response, dict) and signed_url_response.get('error'):
                         if "not found" in str(signed_url_response['error']).lower():
-                            continue  # Try next extension
-                        continue  # Skip other errors for speed
+                            continue  
+                        continue  
                     
                     signed_url = signed_url_response.get('signedURL') or signed_url_response.get('signed_url')
                     if signed_url:
                         return Response(data=signed_url, success=True)
                         
                 except Exception as e:
-                    continue  # Skip errors for speed
+                    continue  
             
-            # No file found - return None quickly
             return Response(data=None, success=True)
         
         except Exception as e:
@@ -284,7 +258,6 @@ class RepositorySchema:
             return Response(data=str(e), success=False)
 
     async def update_schema_display_picture(self, schema_id: str, display_picture_url: str) -> Response:
-        """Update schema display_picture field."""
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").update({
@@ -297,5 +270,18 @@ class RepositorySchema:
             
             return Response(data=data_supabase.data[0], success=True)
         
+        except Exception as e:
+            return Response(data=str(e), success=False)
+    
+    async def delete_schema(self, schema_id: str):
+        try:
+            supabase = self._get_supabase_client()
+            data_supabase = supabase.table("schema").delete().eq("id", schema_id).execute()
+            
+            if not data_supabase.data:
+                raise Exception("Erro ao excluir o schema")
+            
+            return Response(data=data_supabase.data[0], success=True)
+            
         except Exception as e:
             return Response(data=str(e), success=False)

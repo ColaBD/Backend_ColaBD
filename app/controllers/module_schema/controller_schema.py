@@ -22,13 +22,11 @@ service_schema = ServiceSchema()
 
 
 def http_exception(result, status=500):
-    """Helper function to raise HTTP exceptions."""
     raise HTTPException(detail=result.data, status_code=status)
 
 
 @router.get("/", response_model=Response)
 async def get_all_schemas(current_user_id: str = Depends(get_current_user_id)):
-    """Get all schemas for the authenticated user."""
     result = await service_schema.get_schemas_by_user(current_user_id)
     
     if not result.success:
@@ -39,7 +37,6 @@ async def get_all_schemas(current_user_id: str = Depends(get_current_user_id)):
 
 @router.post("/", response_model=Response)
 async def create_schema(schema_data: CreateSchema, current_user_id: str = Depends(get_current_user_id)):
-    """Create a new schema and associate it with the authenticated user."""
     result = await service_schema.create_schema(schema_data, current_user_id)
     
     if not result.success:
@@ -53,9 +50,7 @@ async def update_schema(
     schema_id: str = Form(...),
     cells: str = Form(...),  # JSON string of cells data
     display_picture: Optional[UploadFile] = File(None),
-    current_user_id: str = Depends(get_current_user_id)
-):
-    """Update a schema with cells data and save to MongoDB. Supports image upload via multipart form data."""
+    current_user_id: str = Depends(get_current_user_id)):
     try:
         logger.info(f"Starting schema update for schema_id: {schema_id}, user_id: {current_user_id}")
         logger.info(f"Has display_picture: {display_picture is not None}")
@@ -96,7 +91,6 @@ async def update_schema(
 
 @router.get("/{schema_id}", response_model=Response)
 async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Get schema by ID with cells data from MongoDB."""
     result = await service_schema.get_schema_with_cells(schema_id, current_user_id)
     
     if not result.success:
@@ -104,10 +98,17 @@ async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_cu
     
     return Response(data=result.data, success=True)
 
+@router.delete("/{schema_id}", response_model=Response)
+async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
+    result = await service_schema.delete_schema(schema_id, current_user_id)
+    
+    if not result.success:
+        http_exception(result, 404)
+    
+    return Response(data=result.data, success=True)
 
 @router.get("/user/{user_id}", response_model=Response)
 async def get_schemas_by_user(user_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Get all schemas for a specific user (admin endpoint)."""
     if user_id != current_user_id:
         raise HTTPException(status_code=403, detail="Acesso negado: você só pode acessar seus próprios schemas")
     
@@ -117,33 +118,3 @@ async def get_schemas_by_user(user_id: str, current_user_id: str = Depends(get_c
         http_exception(result, 404)
     
     return Response(data=result.data, success=True)
-
-
-@router.post("/test-upload", response_model=Response)
-async def test_upload(
-    schema_id: str = Form(...),
-    display_picture: Optional[UploadFile] = File(None),
-    current_user_id: str = Depends(get_current_user_id)
-):
-    """Test endpoint to debug image upload issues."""
-    try:
-        logger.info(f"Test upload started for schema_id: {schema_id}")
-        
-        if not display_picture:
-            return Response(data={"message": "No image provided"}, success=True)
-        
-        logger.info(f"Image details - filename: {display_picture.filename}, content_type: {display_picture.content_type}, size: {display_picture.size}")
-        
-        # Test just the upload part
-        upload_result = await service_schema.repo_schema.upload_schema_image(schema_id, display_picture)
-        
-        if not upload_result.success:
-            logger.error(f"Upload failed: {upload_result.data}")
-            return Response(data=f"Upload failed: {upload_result.data}", success=False)
-        
-        logger.info("Upload successful")
-        return Response(data={"message": "Upload test successful", "result": upload_result.data}, success=True)
-        
-    except Exception as e:
-        logger.error(f"Test upload error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
