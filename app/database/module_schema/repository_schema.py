@@ -273,7 +273,7 @@ class RepositorySchema:
         except Exception as e:
             return Response(data=str(e), success=False)
     
-    async def delete_schema(self, schema_id: str):
+    async def delete_schema(self, schema_id: str) -> Response:
         try:
             supabase = self._get_supabase_client()
             data_supabase = supabase.table("schema").delete().eq("id", schema_id).execute()
@@ -283,5 +283,21 @@ class RepositorySchema:
             
             return Response(data=data_supabase.data[0], success=True)
             
+        except Exception as e:
+            return Response(data=str(e), success=False)
+        
+    async def update_schema_title(self, schema_id: str, new_title: str) -> Response:
+        try:
+            supabase = self._get_supabase_client()
+            data_supabase = supabase.table("schema").update({
+                "title": new_title,
+                "updated_at": "now()"
+            }).eq("id", schema_id).execute()
+            
+            if not data_supabase.data:
+                raise Exception("Erro ao atualizar nome do schema")
+            
+            return Response(data=data_supabase.data[0], success=True)
+        
         except Exception as e:
             return Response(data=str(e), success=False)

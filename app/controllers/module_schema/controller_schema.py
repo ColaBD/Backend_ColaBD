@@ -99,13 +99,23 @@ async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_cu
     return Response(data=result.data, success=True)
 
 @router.delete("/{schema_id}", response_model=Response)
-async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
-    result = await service_schema.delete_schema(schema_id, current_user_id)
+async def delete_schema(schema_id: str):
+    result = await service_schema.delete_schema(schema_id)
     
     if not result.success:
         http_exception(result, 404)
     
     return Response(data=result.data, success=True)
+
+@router.put("/title/{schema_id}", response_model=Response)
+async def update_schema_title(schema_id: str, new_title: str):
+    result = await service_schema.update_schema_title(schema_id, new_title)
+    
+    if not result.success:
+        http_exception(result, 500)
+    
+    return Response(data=result.data, success=True)
+    
 
 @router.get("/user/{user_id}", response_model=Response)
 async def get_schemas_by_user(user_id: str, current_user_id: str = Depends(get_current_user_id)):

@@ -111,6 +111,7 @@ class ServiceSchema:
         schema_data["signed_image_url"] = signed_image_url
         return schema_data
     
+    #refatorar essa tripa
     async def update_schema(self, update_schema_data, current_user_id: str, display_picture=None) -> Response:
         try:
             logger.info(f"Service: Starting update_schema for schema_id: {update_schema_data.schema_id}")
@@ -217,16 +218,32 @@ class ServiceSchema:
         except Exception as e:
             return Response(data=str(e), success=False)
         
-    async def delete_schema(self, schema_id: str, current_user_id: str):
-        try:
-            user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
-            if not user_schemas_result.success:
-                return Response(data="Erro ao verificar permissões do usuário", success=False)
+    async def delete_schema(self, schema_id: str):
+        try:           
+            schema_result = await self.repo_schema.get_schema_by_id(schema_id)
+            if not schema_result.success:
+                logger.error(f"Service: Schema not found: {schema_result.data}")
+                return Response(data="Schema não encontrado", success=False)
             
             schema_result = await self.repo_schema.delete_schema(schema_id)
             if not schema_result.success:
                 return Response(data="Erro ao excluir o schema", success=False)
             
             return Response(data=schema_result, success=True)
+        except Exception as e:
+            return Response(data=str(e), success=False)
+        
+    async def update_schema_title(self, schema_id: str, new_title: str) -> Response:
+        try:
+            schema_result = await self.repo_schema.get_schema_by_id(schema_id)
+            if not schema_result.success:
+                logger.error(f"Service: Schema not found: {schema_result.data}")
+                return Response(data="Schema não encontrado", success=False)
+                
+            update_result = await self.repo_schema.update_schema_title(schema_id, new_title)
+            if not update_result.success:
+                return Response(data=f"Erro ao atualizar título do schema: {update_result.data}", success=False)
+            
+            return Response(data=update_result.data, success=True)
         except Exception as e:
             return Response(data=str(e), success=False)
