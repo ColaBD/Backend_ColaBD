@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 from app.models.dto.compartilhado.response import Response
 from app.models.dto.module_schema.create_schema import CreateSchema
-from app.models.dto.module_schema.update_schema import UpdateSchema
+from app.models.dto.module_schema.update_schema_title import UpdateSchemaTitle
 from app.services.module_schema.service_schema import ServiceSchema
 from app.core.auth import get_current_user_id
 
@@ -106,9 +106,9 @@ async def update_schema(
         logger.error(f"Unexpected error in update_schema: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.put("/title/", response_model=Response)
-async def update_schema_title(schema_id: str = Form(...), new_title: str = Form(...)):
-    result = await service_schema.update_schema_title(schema_id, new_title)
+@router.put("/title/{schema_id}", response_model=Response)
+async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle):
+    result = await service_schema.update_schema_title(schema_id, schema_title.new_title)
     
     if not result.success:
         http_exception(result, 500)
