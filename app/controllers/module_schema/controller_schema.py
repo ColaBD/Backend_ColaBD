@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, HTTPException, Depends, Form, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, Form, File, UploadFile
 from typing import Optional, List, Dict, Any
 import json
 import logging
@@ -107,7 +107,7 @@ async def update_schema(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/title/{schema_id}", response_model=Response)
-async def update_schema_title(schema_id: str, new_title: str = Body(...)):
+async def update_schema_title(schema_id: str, new_title: str = Form(...)):
     result = await service_schema.update_schema_title(schema_id, new_title)
     
     if not result.success:
