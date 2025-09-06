@@ -20,7 +20,6 @@ router = APIRouter(
 # Initialize service
 service_schema = ServiceSchema()
 
-
 def http_exception(result, status=500):
     raise HTTPException(detail=result.data, status_code=status)
 
