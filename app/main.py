@@ -40,7 +40,7 @@ app.add_middleware(
 # ---- Endpoints da aplicação ----
 app.include_router(user_route)
 app.include_router(schema_route)
-app.include_router(sio)  
+# app.include_router(sio)  
 # --------------------------------
 
 @app.on_event("startup")
