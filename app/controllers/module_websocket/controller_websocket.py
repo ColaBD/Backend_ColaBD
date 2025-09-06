@@ -1,4 +1,5 @@
 import socketio
+from fastapi import APIRouter, WebSocket
 
 origins = [
   "http://localhost:4200",
@@ -9,6 +10,24 @@ sio = socketio.AsyncServer(
     async_mode="asgi",
     cors_allowed_origins=origins
 )
+
+# route = router = APIRouter(
+#     prefix="/ws",
+#     tags=["WebSocket"]
+# )
+
+# @route.websocket("/atualizar_schema")
+# async def atualizar_schema(websocket: WebSocket):
+#     await websocket.accept()
+#     await websocket.send_text("Conexão WebSocket estabelecida com sucesso!")
+#     try:
+#         while True:
+#             data = await websocket.receive_json()
+#             await websocket.send_text(f"Mensagem recebida: {data}")
+#     except Exception as e:
+#         print(f"Erro na conexão WebSocket: {e}")
+#     finally:
+#         await websocket.close()
 
 @sio.event
 async def connect(sid, environ):# environ -> dados sobre a requisição que abriu o socket
