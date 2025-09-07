@@ -4,7 +4,8 @@ logger = logging.getLogger(__name__)
 
 origins = [
   "http://localhost:4200",
-  "https://colabd.onrender.com"
+  "https://colabd.onrender.com",
+  "https://develop-colabd.onrender.com"
 ]
 
 sio = socketio.AsyncServer(
