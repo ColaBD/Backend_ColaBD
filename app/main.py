@@ -12,8 +12,9 @@ from app.database.common.database_manager import db_manager
 import logging
 import socketio
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('    ')
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("pymongo").setLevel(logging.ERROR)
 
 app = FastAPI( 
   title="ColaBD API",
@@ -21,7 +22,6 @@ app = FastAPI(
   version="1.0.0",
 )
 
-# uvicorn app.main:socket_app --host 0.0.0.0 --port $PORT -> novo jeito de rodar o servidor
 socket_app = socketio.ASGIApp(sio, app)
 
 origins = [
@@ -40,7 +40,6 @@ app.add_middleware(
 # ---- Endpoints da aplicação ----
 app.include_router(user_route)
 app.include_router(schema_route)
-# app.include_router(sio)  
 # --------------------------------
 
 @app.on_event("startup")
