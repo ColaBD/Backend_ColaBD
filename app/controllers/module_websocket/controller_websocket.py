@@ -24,7 +24,7 @@ async def disconnect(sid):
 async def atualizacao_schema(sid, snapshot_tabelas):
     #fazer logica para armazenar em memoria e após 10s sem mudar nada mandar para o banco
     logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")
-    await sio.emit("schema_atualizado", snapshot_tabelas, skip_sid=sid)
+    await sio.emit("schema_atualizado", snapshot_tabelas)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
 # @sio.event
 # async def criar_tabela(sid, data):
