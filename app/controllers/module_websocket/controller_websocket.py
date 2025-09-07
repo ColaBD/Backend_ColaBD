@@ -1,5 +1,4 @@
 import socketio
-from fastapi import APIRouter, WebSocket
 import logging
 logger = logging.getLogger(__name__)
 
@@ -24,8 +23,8 @@ async def disconnect(sid):
 @sio.event
 async def atualizacao_schema(sid, snapshot_tabelas):
     #fazer logica para armazenar em memoria e após 10s sem mudar nada mandar para o banco
-    logger.info(f"📦 Cliente {sid} atulizou a tabela:", snapshot_tabelas)
-    # await sio.emit("schema_atualizado", snapshot_tabelas, skip_sid=sid)
+    logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")
+    await sio.emit("schema_atualizado", snapshot_tabelas, skip_sid=sid)
 
 # @sio.event
 # async def criar_tabela(sid, data):
