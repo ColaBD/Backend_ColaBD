@@ -11,10 +11,10 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     return get_token_decoded(credentials.credentials)
     
 
-def get_current_user_WS(user_token: str):
+def get_current_user_WS(user_token: str) -> str:
     return get_token_decoded(user_token)
 
-def get_token_decoded(token: str):
+def get_token_decoded(token: str) -> str:
     result = decode_access_token(token)
     
     if not result.success:
