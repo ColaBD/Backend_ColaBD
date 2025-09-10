@@ -27,16 +27,16 @@ sio = socketio.AsyncServer(
 
 @sio.event
 async def connect(sid, environ, auth):
-    if (not auth):
-        token = auth.get("token")
-        logger.info("hhhhhhhhhhhhhhhhhhh    "+ json.dumps(auth))
-        logger.info("pppppppppppppppp "+token)
-        
-        token_autenticado: str = get_current_user_id(token)
-        user_dict.update({"id": token_autenticado})
-        
-        logger.info(f"✅ Usuário {user_dict.get(sid)} conectado com sid {sid}")
-    logger.error("Auth não enviado")
+
+    token = auth.get("token")
+    logger.info("hhhhhhhhhhhhhhhhhhh    "+ json.dumps(auth))
+    logger.info("pppppppppppppppp "+token)
+    
+    token_autenticado: str = get_current_user_id(token)
+    user_dict.update({"id": token_autenticado})
+    
+    logger.info(f"✅ Usuário {user_dict.get(sid)} conectado com sid {sid}")
+    # logger.error("Auth não enviado")
 
 @sio.event
 async def disconnect(sid):
