@@ -32,9 +32,10 @@ async def disconnect(sid):
     logger.info(f"📦 Cliente desconectado: {sid}")
     
 @sio.event
-async def atualizacao_schema(sid, snapshot_tabelas, current_user_id: str = Depends(get_current_user_id)):
-    logger.error(f"ooooooooooooooo  {current_user_id}  oooooooooooooooooo")
-    service_websocket.salvamento_agendado(snapshot_tabelas, current_user_id)
+async def atualizacao_schema(sid, snapshot_tabelas):
+    #O ERRO ESTÀ NA PARTE DE NÂO CONSEGUIR PEGAR O ID DO USUARIO
+    logger.error(f"ooooooooooooooo  {sid}  oooooooooooooooooo")
+    service_websocket.salvamento_agendado(snapshot_tabelas, sid)
         
     logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")
     await sio.emit("schema_atualizado", snapshot_tabelas)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
