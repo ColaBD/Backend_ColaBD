@@ -1,6 +1,16 @@
+from fastapi import Depends
 import socketio
 import logging
+
+from app.core.auth import get_current_user_id
+from app.models.entities.module_schema.update_schema import UpdateSchemaData
+from app.services.module_schema.service_schema import ServiceSchema
+from app.services.module_websocket.websocket_service import ServiceWebsocket
+
 logger = logging.getLogger(__name__)
+
+service_schema = ServiceSchema()
+service_websocket = ServiceWebsocket(service_schema=service_schema)
 
 origins = [
   "http://localhost:4200",
@@ -22,8 +32,9 @@ async def disconnect(sid):
     logger.info(f"📦 Cliente desconectado: {sid}")
     
 @sio.event
-async def atualizacao_schema(sid, snapshot_tabelas):
-    #fazer logica para armazenar em memoria e após 10s sem mudar nada mandar para o banco
+async def atualizacao_schema(sid, snapshot_tabelas, current_user_id: str = Depends(get_current_user_id)):
+    service_websocket.salvamento_agendado(snapshot_tabelas, current_user_id)
+        
     logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")
     await sio.emit("schema_atualizado", snapshot_tabelas)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 

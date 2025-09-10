@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Form, File, UploadFile
-from typing import Optional, List, Dict, Any
+from typing import Optional
 import json
 import logging
+
+from app.models.entities.module_schema.update_schema import UpdateSchemaData
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +82,6 @@ async def update_schema(
         logger.info(f"Successfully parsed {len(cells_data)} cells")
         
         # Create UpdateSchema object manually since we're using Form data
-        class UpdateSchemaData:
-            def __init__(self, schema_id: str, cells: List[Dict[str, Any]]):
-                self.schema_id = schema_id
-                self.cells = cells
-        
         update_data = UpdateSchemaData(schema_id, cells_data)
         
         # Call service with display_picture parameter
