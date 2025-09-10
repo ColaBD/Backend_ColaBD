@@ -27,7 +27,7 @@ class ServiceWebsocket:
             await asyncio.sleep(10) 
             
             update_data = UpdateSchemaData(snapshot_tabelas["schema_id"], snapshot_tabelas["table_info"])
-            self.service_schema.update_schema(update_data, user_id)
+            await self.service_schema.update_schema(update_data, user_id)
             
             logger.info(f"💾 Schema {snapshot_tabelas['schema_id']} salvo no banco!")
         except asyncio.CancelledError:
