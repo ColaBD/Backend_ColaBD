@@ -1,11 +1,12 @@
 import asyncio
 import logging
 from app.models.entities.module_schema.update_schema import UpdateSchemaData
+from app.services.module_schema.service_schema import ServiceSchema
 
 logger = logging.getLogger(__name__)
 
 class ServiceWebsocket:
-    def __init__(self, service_schema):
+    def __init__(self, service_schema: ServiceSchema):
         self.pending_updates = {}
         self.service_schema = service_schema
 

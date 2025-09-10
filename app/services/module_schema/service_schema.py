@@ -114,6 +114,7 @@ class ServiceSchema:
     #refatorar essa tripa
     async def update_schema(self, update_schema_data, current_user_id: str, display_picture=None) -> Response:
         try:
+            logger.error("---------------------------------------------------------------------------")
             logger.info(f"Service: Starting update_schema for schema_id: {update_schema_data.schema_id}")
             schema_id = update_schema_data.schema_id
             cells_data = {"cells": update_schema_data.cells}
