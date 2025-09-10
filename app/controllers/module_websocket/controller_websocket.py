@@ -27,6 +27,8 @@ sio = socketio.AsyncServer(
 @sio.event
 async def connect(sid, environ, auth):
     token = auth.get("token")
+    logger.info("hhhhhhhhhhhhhhhhhhh    ", auth)
+    logger.info("pppppppppppppppp ", token)
     
     token_autenticado: str = get_current_user_id(token)
     user_dict.update({"id": token_autenticado})
