@@ -33,7 +33,7 @@ async def connect(sid, environ, auth):
     token_autenticado: str = get_current_user_WS(token)
     user_dict.update({"id": token_autenticado})
     
-    logger.info(f"✅ Usuário {user_dict.get(sid)} conectado com sid {sid}")
+    logger.info(f"✅ Usuário {user_dict.get("id")} conectado com sid {sid}")
     # logger.error("Auth não enviado")
 
 @sio.event
