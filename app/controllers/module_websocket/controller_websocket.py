@@ -33,6 +33,7 @@ async def disconnect(sid):
     
 @sio.event
 async def atualizacao_schema(sid, snapshot_tabelas, current_user_id: str = Depends(get_current_user_id)):
+    logger.error(f"ooooooooooooooo  {current_user_id}  oooooooooooooooooo")
     service_websocket.salvamento_agendado(snapshot_tabelas, current_user_id)
         
     logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")

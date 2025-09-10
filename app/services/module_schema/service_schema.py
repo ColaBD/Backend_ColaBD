@@ -6,6 +6,7 @@ from app.database.module_schema.repository_cells import RepositoryCells
 from app.models.dto.compartilhado.response import Response
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class ServiceSchema:
@@ -114,7 +115,6 @@ class ServiceSchema:
     #refatorar essa tripa
     async def update_schema(self, update_schema_data, current_user_id: str, display_picture=None) -> Response:
         try:
-            logger.error("---------------------------------------------------------------------------")
             logger.info(f"Service: Starting update_schema for schema_id: {update_schema_data.schema_id}")
             schema_id = update_schema_data.schema_id
             cells_data = {"cells": update_schema_data.cells}
@@ -125,7 +125,7 @@ class ServiceSchema:
                 logger.error(f"Service: Schema not found: {schema_result.data}")
                 return Response(data="Schema não encontrado", success=False)
             logger.info("Service: Schema found successfully")
-
+            logger.error(f"\n----------------------- {current_user_id} ----------------------------\n")
             logger.info("Service: Step 2 - Verifying user permissions")
             user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
             if not user_schemas_result.success:
