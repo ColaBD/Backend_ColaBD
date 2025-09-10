@@ -3,7 +3,7 @@ from fastapi import Depends
 import socketio
 import logging
 
-from app.core.auth import get_current_user_id
+from app.core.auth import get_current_user_WS
 from app.models.entities.module_schema.update_schema import UpdateSchemaData
 from app.services.module_schema.service_schema import ServiceSchema
 from app.services.module_websocket.websocket_service import ServiceWebsocket
@@ -29,10 +29,8 @@ sio = socketio.AsyncServer(
 async def connect(sid, environ, auth):
 
     token = auth.get("token")
-    logger.info("hhhhhhhhhhhhhhhhhhh    "+ json.dumps(auth))
-    logger.info("pppppppppppppppp "+token)
     
-    token_autenticado: str = get_current_user_id(token)
+    token_autenticado: str = get_current_user_WS(token)
     user_dict.update({"id": token_autenticado})
     
     logger.info(f"✅ Usuário {user_dict.get(sid)} conectado com sid {sid}")

@@ -14,7 +14,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 def get_current_user_WS(user_token: str) -> str:
     return get_token_decoded(user_token)
 
-def get_token_decoded(token: str) -> str:
+def get_token_decoded(token: str):
     result = decode_access_token(token)
     
     if not result.success:
