@@ -10,7 +10,7 @@ EXPIRATION_MINUTES = 30
 def create_access_token(data: dict):
   expire = datetime.now(timezone.utc) + timedelta(minutes=EXPIRATION_MINUTES)
   
-  to_encode = { # necessário, porque vai usar apenas o email e id para a criação do jwt e deve passar um dict
+  to_encode = { 
     "id": data["id"],
     "email": data["email"]
   }
@@ -19,7 +19,7 @@ def create_access_token(data: dict):
   
   return Response(data=InfoAuth(access_token=jwt_token, exp=expire, token_type="Bearer"), success=True)
 
-def decode_access_token(token: str): # -> necessário para futuros metodos que precisam saber quem é o usuario
+def decode_access_token(token: str): 
   try:
     payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[ALGORITHM])
     user_id = payload.get("id")

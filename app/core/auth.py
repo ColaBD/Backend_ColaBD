@@ -8,9 +8,13 @@ security = HTTPBearer()
 
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
-    token = credentials.credentials
+    return get_token_decoded(credentials.credentials)
     
-    # Decode the JWT token
+
+def get_current_user_WS(user_token: str):
+    return get_token_decoded(user_token)
+
+def get_token_decoded(token: str):
     result = decode_access_token(token)
     
     if not result.success:
@@ -21,7 +25,6 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         )
     
     return result.data
-
 
 def get_current_user_id(current_user: Dict = Depends(get_current_user)) -> str:
     return current_user["id"]
