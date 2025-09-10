@@ -1,3 +1,4 @@
+import json
 from fastapi import Depends
 import socketio
 import logging
@@ -28,7 +29,7 @@ sio = socketio.AsyncServer(
 async def connect(sid, environ, auth):
     if (not auth):
         token = auth.get("token")
-        logger.info("hhhhhhhhhhhhhhhhhhh    "+ auth)
+        logger.info("hhhhhhhhhhhhhhhhhhh    "+ json.dumps(auth))
         logger.info("pppppppppppppppp "+token)
         
         token_autenticado: str = get_current_user_id(token)
