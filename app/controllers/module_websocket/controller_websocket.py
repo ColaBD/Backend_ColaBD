@@ -27,7 +27,10 @@ sio = socketio.AsyncServer(
 @sio.event
 async def connect(sid, environ, auth):
     token = auth.get("token")
-    user_dict.update({"id": get_current_user_id(token)})
+    
+    token_autenticado: str = get_current_user_id(token)
+    user_dict.update({"id": token_autenticado})
+    
     print(f"✅ Usuário {user_dict.get(sid)} conectado com sid {sid}")
 
 @sio.event
