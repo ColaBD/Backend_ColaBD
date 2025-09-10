@@ -29,7 +29,7 @@ class ServiceWebsocket:
             update_data = UpdateSchemaData(snapshot_tabelas["schema_id"], snapshot_tabelas["table_info"])
             await self.service_schema.update_schema(update_data, user_id)
             
-            logger.info(f"💾 Schema {snapshot_tabelas['schema_id']} salvo no banco!")
+            logger.info(f"Schema {snapshot_tabelas['schema_id']} salvo no banco!")
         except asyncio.CancelledError:
-            # foi cancelada porque chegou outra atualização antes dos 10s
+            logger.info(f"Operação cancelada, pois o schema foi alterado")
             return

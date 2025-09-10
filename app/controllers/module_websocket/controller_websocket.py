@@ -30,10 +30,9 @@ async def connect(sid, environ, auth):
 
     token = auth.get("token")
     
-    token_autenticado: str = get_current_user_WS(token)
-    user_dict.update({"id": token_autenticado})
-    
-    logger.info(f"✅ aaaaaaaa   {token}    conectado com sid {sid}")
+    user_dict_id_email: str = get_current_user_WS(token)
+    user_dict.update({"id": user_dict_id_email["id"]})
+
     logger.info(f"✅ Usuário {user_dict.get("id")} conectado com sid {sid}")
     # logger.error("Auth não enviado")
 
@@ -43,8 +42,6 @@ async def disconnect(sid):
     
 @sio.event
 async def atualizacao_schema(sid, snapshot_tabelas):
-    #O ERRO ESTÀ NA PARTE DE NÂO CONSEGUIR PEGAR O ID DO USUARIO
-    logger.error(f"ooooooooooooooo  {user_dict.get("id")}  oooooooooooooooooo")
     service_websocket.salvamento_agendado(snapshot_tabelas, user_dict.get("id"))
         
     logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")
