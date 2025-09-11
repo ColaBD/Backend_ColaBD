@@ -125,7 +125,7 @@ class ServiceSchema:
                 logger.error(f"Service: Schema not found: {schema_result.data}")
                 return Response(data="Schema não encontrado", success=False)
             logger.info("Service: Schema found successfully")
-            logger.error(f"\n----------------------- {current_user_id} ----------------------------\n")
+            
             logger.info("Service: Step 2 - Verifying user permissions")
             user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
             if not user_schemas_result.success:

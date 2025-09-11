@@ -24,7 +24,7 @@ class ServiceWebsocket:
 
     async def salvamento_com_atraso(self, snapshot_tabelas, user_id):
         try:
-            await asyncio.sleep(10) 
+            await asyncio.sleep(5) 
             
             update_data = UpdateSchemaData(snapshot_tabelas["schema_id"], snapshot_tabelas["table_info"])
             await self.service_schema.update_schema(update_data, user_id)
