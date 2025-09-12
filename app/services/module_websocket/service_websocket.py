@@ -20,13 +20,13 @@ class ServiceWebsocket:
 
         task = asyncio.create_task(self.salvamento_com_atraso(snapshot_tabelas, user_id)) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
         
-        self.pending_updates[schema_id] = (snapshot_tabelas, task)
+        self.pending_updates[schema_id] = (snapshot_tabelas["table_info"]["cells"], task)
 
     async def salvamento_com_atraso(self, snapshot_tabelas, user_id):
         try:
             await asyncio.sleep(5) 
             
-            update_data = UpdateSchemaData(snapshot_tabelas["schema_id"], snapshot_tabelas["table_info"])
+            update_data = UpdateSchemaData(snapshot_tabelas["schema_id"], snapshot_tabelas["table_info"]["cells"])
             await self.service_schema.update_schema(update_data, user_id)
             
             logger.info(f"Schema {snapshot_tabelas['schema_id']} salvo no banco!")
