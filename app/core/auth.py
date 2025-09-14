@@ -10,7 +10,6 @@ security = HTTPBearer()
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
     return get_token_decoded(credentials.credentials)
     
-
 def get_current_user_WS(user_token: str) -> str:
     return get_token_decoded(user_token)
 

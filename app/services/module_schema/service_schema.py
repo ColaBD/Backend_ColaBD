@@ -219,8 +219,13 @@ class ServiceSchema:
         except Exception as e:
             return Response(data=str(e), success=False)
         
-    async def delete_schema(self, schema_id: str):
-        try:           
+    async def delete_schema(self, schema_id: str, current_user_id:str):
+        try:     
+            user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
+            if not user_schemas_result.success:
+                logger.error(f"Service Error. checking permissions for: {user_schemas_result.data}")
+                return Response(data="Erro ao verificar permissões do usuário", success=False)
+                  
             schema_result = await self.repo_schema.get_schema_by_id(schema_id)
             if not schema_result.success:
                 logger.error(f"Service: Schema not found: {schema_result.data}")
@@ -234,8 +239,13 @@ class ServiceSchema:
         except Exception as e:
             return Response(data=str(e), success=False)
         
-    async def update_schema_title(self, schema_id: str, new_title: str) -> Response:
+    async def update_schema_title(self, schema_id: str, new_title: str, current_user_id: str) -> Response:
         try:
+            user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
+            if not user_schemas_result.success:
+                logger.error(f"Service Error. checking permissions for: {user_schemas_result.data}")
+                return Response(data="Erro ao verificar permissões do usuário", success=False)
+            
             schema_result = await self.repo_schema.get_schema_by_id(schema_id)
             if not schema_result.success:
                 logger.error(f"Service: Schema not found: {schema_result.data}")

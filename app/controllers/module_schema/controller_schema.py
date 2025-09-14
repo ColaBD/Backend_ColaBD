@@ -103,8 +103,8 @@ async def update_schema(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/title/{schema_id}", response_model=Response)
-async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle):
-    result = await service_schema.update_schema_title(schema_id, schema_title.new_title)
+async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle, current_user_id: str = Depends(get_current_user_id)):
+    result = await service_schema.update_schema_title(schema_id, schema_title.new_title, current_user_id)
     
     if not result.success:
         http_exception(result, 500)
@@ -112,8 +112,8 @@ async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle):
     return Response(data=result.data, success=True)
 
 @router.delete("/{schema_id}", response_model=Response)
-async def delete_schema(schema_id: str):
-    result = await service_schema.delete_schema(schema_id)
+async def delete_schema(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
+    result = await service_schema.delete_schema(schema_id, current_user_id)
     
     if not result.success:
         http_exception(result, 404)
