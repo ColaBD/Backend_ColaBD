@@ -1,7 +1,0 @@
-services:
-  # A Docker web service
-  - type: web
-    name: colabd
-    runtime: python
-    plan: starter
-    autoDeploy: true
