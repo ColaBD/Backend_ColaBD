@@ -40,4 +40,4 @@ async def atualizacao_schema(sid, snapshot_tabelas):
     service_websocket.salvamento_agendado(snapshot_tabelas, user_dict.get("id"))
         
     logger.info(f"📦 Cliente {sid} atulizou a tabela: {snapshot_tabelas}")
-    await sio.emit("schema_atualizado", snapshot_tabelas)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
+    await sio.emit("schema_atualizado", snapshot_tabelas, skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
