@@ -41,8 +41,8 @@ class DatabaseManager:
 
     async def _initialize_supabase(self):
         try:
-            connection_url = os.getenv('CONNECTION_POSTGRES_SUPABASE')
-            secret_key = os.getenv('SECRET_KEY_POSTGRES_SUPABASE')
+            connection_url = (os.getenv('CONNECTION_POSTGRES_SUPABASE') or '').strip()
+            secret_key = (os.getenv('SECRET_KEY_POSTGRES_SUPABASE') or '').strip()
             
             if not connection_url or not secret_key:
                 raise ValueError("Supabase connection URL and secret key must be set in environment variables")

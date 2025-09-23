@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 from app.models.dto.compartilhado.response import Response
 from app.models.dto.module_schema.create_schema import CreateSchema
+from app.models.dto.module_schema.vinculate_schema import VinculateSchema
 from app.models.dto.module_schema.update_schema_title import UpdateSchemaTitle
 from app.services.module_schema.service_schema import ServiceSchema
 from app.core.auth import get_current_user_id
@@ -62,6 +63,21 @@ async def create_schema(schema_data: CreateSchema, current_user_id: str = Depend
     if not result.success:
         http_exception(result, 400)
     
+    return Response(data=result.data, success=True)
+
+
+@router.patch("/", response_model=Response)
+async def vinculate_schema(schema_data: VinculateSchema, current_user_id: str = Depends(get_current_user_id)):
+    """Vinculate a user to a schema by email."""
+    result = await service_schema.vinculate_user_to_schema(
+        schema_data.schema_id, 
+        schema_data.user_email, 
+        current_user_id
+    )
+
+    if not result.success:
+        http_exception(result, 400)
+
     return Response(data=result.data, success=True)
 
 @router.put("/", response_model=Response)

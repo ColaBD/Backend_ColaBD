@@ -29,7 +29,7 @@ async def connect(sid, environ, auth):
     user_dict_id_email: str = get_current_user_WS(token)
     user_dict.update({"id": user_dict_id_email["id"]})
 
-    logger.info(f"✅ Usuário {user_dict.get("id")} conectado com sid {sid}")
+    logger.info(f"✅ Usuário conectado com sid {sid}")
 
 @sio.event
 async def disconnect(sid):

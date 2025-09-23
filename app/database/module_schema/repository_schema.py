@@ -142,9 +142,9 @@ class RepositorySchema:
             logger.info(f"Repository: Starting image upload for schema {schema_id}")
             logger.info(f"Repository: Image file - name: {image_file.filename}, type: {image_file.content_type}, size: {image_file.size}")
             
-            # Use bucket-specific key for storage operations
-            connection_url = os.getenv('CONNECTION_POSTGRES_SUPABASE')
-            bucket_key = os.getenv('SECRET_SUPABASE_BUCKET')
+            # Use bucket-specific key for storage operations (strip to avoid hidden newlines)
+            connection_url = (os.getenv('CONNECTION_POSTGRES_SUPABASE') or '').strip()
+            bucket_key = (os.getenv('SECRET_SUPABASE_BUCKET') or '').strip()
             
             if not bucket_key:
                 logger.error("SECRET_SUPABASE_BUCKET environment variable not found")
@@ -209,9 +209,9 @@ class RepositorySchema:
 
     async def get_schema_image_signed_url(self, schema_id: str) -> Response:
         try:
-            # Use bucket-specific key for storage operations
-            connection_url = os.getenv('CONNECTION_POSTGRES_SUPABASE')
-            bucket_key = os.getenv('SECRET_SUPABASE_BUCKET')
+            # Use bucket-specific key for storage operations (strip to avoid hidden newlines)
+            connection_url = (os.getenv('CONNECTION_POSTGRES_SUPABASE') or '').strip()
+            bucket_key = (os.getenv('SECRET_SUPABASE_BUCKET') or '').strip()
             
             if not bucket_key:
                 logger.error("SECRET_SUPABASE_BUCKET environment variable not found")
