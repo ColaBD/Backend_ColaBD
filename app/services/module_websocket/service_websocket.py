@@ -70,6 +70,18 @@ class ServiceWebsocket:
         try:
             await asyncio.sleep(3) 
             
+            if(schema_id == None or schema_id.strip() == ""):
+                logger.error("Schema ID é None, não é possível salvar o schema.")
+                return
+            
+            if(user_id == None or user_id.strip() == ""):
+                logger.error("User ID é None, não é possível salvar o schema.")
+                return
+            
+            if (self.cells.__len__() == 0):
+                logger.error("Schema está vazio, não é possível salvar o schema.")
+                return
+            
             update_data = UpdateSchemaData(schema_id, self.cells)
             await self.service_schema.update_schema(update_data, user_id)
             
