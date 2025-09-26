@@ -61,6 +61,8 @@ class ServiceWebsocket:
         if (schema_id in self.pending_updates):
             _, task = self.pending_updates[schema_id] # _ -> seria o snapshot_tabelas
             task.cancel()
+            
+        logger.info(f"cellssssssssssss:          --   {self.cells}")
 
         task = asyncio.create_task(self.salvamento_com_atraso(user_id, schema_id)) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
         
