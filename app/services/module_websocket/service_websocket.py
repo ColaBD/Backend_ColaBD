@@ -56,7 +56,7 @@ class ServiceWebsocket:
     def salvamento_agendado(self, received_data: BaseTable, user_id: str, schema_id: str):       
         #fazer um preprocessamento para do json do schema incluir os dados que vão vindo do websocket
         self.__preprocess_schema_received_data(received_data) 
-
+        logger.error(f"schemaaaaa.  ---  {schema_id}")
         # se já tinha uma task para esse schema, cancela
         if (schema_id in self.pending_updates):
             _, task = self.pending_updates[schema_id] # _ -> seria o snapshot_tabelas
@@ -71,7 +71,7 @@ class ServiceWebsocket:
             await asyncio.sleep(3) 
             
             if(schema_id == None or schema_id.strip() == ""):
-                logger.error(f"Schema ID é None, não é possível salvar o schema.    {schema_id}")
+                logger.error(f"Schema ID é None, não é possível salvar o schema.  ---  {schema_id}")
                 return
             
             if(user_id == None or user_id.strip() == ""):
