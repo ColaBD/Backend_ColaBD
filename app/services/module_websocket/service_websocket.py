@@ -56,7 +56,7 @@ class ServiceWebsocket:
     def salvamento_agendado(self, received_data: BaseTable, user_id: str, schema_id: str):       
         #fazer um preprocessamento para do json do schema incluir os dados que vão vindo do websocket
         self.__preprocess_schema_received_data(received_data) 
-        logger.error(f"schemaaaaa.  ---  {schema_id}")
+
         # se já tinha uma task para esse schema, cancela
         if (schema_id in self.pending_updates):
             _, task = self.pending_updates[schema_id] # _ -> seria o snapshot_tabelas
