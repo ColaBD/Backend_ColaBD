@@ -26,6 +26,7 @@ sio = socketio.AsyncServer(
 )
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
+    logger.error(f"ttttttttttttttttt.  ---  {schema_id}")
     service_websocket.salvamento_agendado(data, user_id, schema_id)
     
     logger.info(f"📦 dados sendo emitidos...")
