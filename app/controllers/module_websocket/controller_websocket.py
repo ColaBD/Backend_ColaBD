@@ -34,6 +34,7 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
 
 @sio.event
 async def connect(sid, environ, auth):
+    global schema_id
     token = auth.get("token")
     schema_id = auth.get("schema_id")
 
