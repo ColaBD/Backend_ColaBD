@@ -71,7 +71,7 @@ class ServiceWebsocket:
             await asyncio.sleep(3) 
             
             if(schema_id == None or schema_id.strip() == ""):
-                logger.error("Schema ID é None, não é possível salvar o schema.")
+                logger.error(f"Schema ID é None, não é possível salvar o schema.    {schema_id}")
                 return
             
             if(user_id == None or user_id.strip() == ""):
