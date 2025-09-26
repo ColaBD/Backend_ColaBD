@@ -16,9 +16,10 @@ class ServiceWebsocket:
         self.schema_id = ""
         self.user_id = ""
         
-    def populate_cells(self):
+    async def populate_cells(self):
         # self.cells = self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]
-        logger.error(f"ppppppppppppppppppppppppp        {self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]}")
+        a = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]
+        logger.error(f"ppppppppppppppppppppppppp        {a.data}")
         
     def __manipulate_create_table(self, received_data: CreateTable):
         self.cells.append(received_data.model_dump())

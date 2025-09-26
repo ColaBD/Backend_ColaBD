@@ -38,7 +38,7 @@ async def connect(sid, environ, auth):
     service_websocket.user_id = schema_dict_id_email["id"]
     service_websocket.schema_id = auth.get("schema_id")
     
-    service_websocket.populate_cells()
+    await service_websocket.populate_cells()
 
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
     
