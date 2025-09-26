@@ -26,7 +26,8 @@ sio = socketio.AsyncServer(
 )
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
-    global schema_id
+    global schema_id, user_id
+    
     service_websocket.salvamento_agendado(data, user_id, schema_id)
     
     logger.info(f"🚀 dados sendo emitidos...")
@@ -34,7 +35,8 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
 
 @sio.event
 async def connect(sid, environ, auth):
-    global schema_id
+    global schema_id, user_id
+    
     token = auth.get("token")
     schema_id = auth.get("schema_id")
 
