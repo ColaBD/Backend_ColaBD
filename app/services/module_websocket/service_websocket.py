@@ -13,6 +13,12 @@ class ServiceWebsocket:
         self.schema_body = None
         self.service_schema = service_schema
         self.cells: List[Dict[str, Any]] = []
+        self.schema_id = ""
+        self.user_id = ""
+        
+    def populate_cells(self):
+        # self.cells = self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]
+        logger.error(f"ppppppppppppppppppppppppp        {self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]}")
         
     def __manipulate_create_table(self, received_data: CreateTable):
         self.cells.append(received_data.model_dump())
@@ -52,28 +58,27 @@ class ServiceWebsocket:
         elif (isinstance(received_data, MoveTable)):
             self.__manipulate_move_table(received_data)
 
-    def salvamento_agendado(self, received_data: BaseTable, user_id: str, schema_id: str):       
-        #fazer um preprocessamento para do json do schema incluir os dados que vão vindo do websocket
+    def salvamento_agendado(self, received_data: BaseTable):       
         self.__preprocess_schema_received_data(received_data) 
 
         # se já tinha uma task para esse schema, cancela
-        if (schema_id in self.pending_updates):
-            _, task = self.pending_updates[schema_id] # _ -> seria o snapshot_tabelas
+        if (self.schema_id in self.pending_updates):
+            _, task = self.pending_updates[self.schema_id] # _ -> seria o snapshot_tabelas
             task.cancel()
 
-        task = asyncio.create_task(self.salvamento_com_atraso(user_id, schema_id)) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
+        task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
         
-        self.pending_updates[schema_id] = (self.cells, task)
+        self.pending_updates[self.schema_id] = (self.cells, task)
 
-    async def salvamento_com_atraso(self, user_id: str, schema_id: str):
+    async def salvamento_com_atraso(self):
         try:
             await asyncio.sleep(3) 
             
-            if(schema_id == None or schema_id.strip() == ""):
-                logger.error(f"Schema ID é None, não é possível salvar o schema.  ---  {schema_id}")
+            if(self.schema_id == None or self.schema_id.strip() == ""):
+                logger.error(f"Schema ID é None, não é possível salvar o schema.")
                 return
             
-            if(user_id == None or user_id.strip() == ""):
+            if(self.user_id == None or self.user_id.strip() == ""):
                 logger.error("User ID é None, não é possível salvar o schema.")
                 return
             
@@ -81,10 +86,10 @@ class ServiceWebsocket:
                 logger.error("Schema está vazio, não é possível salvar o schema.")
                 return
             
-            update_data = UpdateSchemaData(schema_id, self.cells)
-            await self.service_schema.update_schema(update_data, user_id)
+            update_data = UpdateSchemaData(self.schema_id, self.cells)
+            await self.service_schema.update_schema(update_data, self.user_id)
             
-            logger.info(f"Schema {schema_id} salvo no banco!")
+            logger.info(f"Schema {self.schema_id} salvo no banco!")
         except asyncio.CancelledError:
             logger.info(f"Operação cancelada, pois o schema foi alterado")
             return

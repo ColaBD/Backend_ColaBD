@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 service_schema = ServiceSchema()
 service_websocket = ServiceWebsocket(service_schema=service_schema)
-user_id = ""
-schema_id = ""
 
 origins = [
   "http://localhost:4200",
@@ -25,25 +23,22 @@ sio = socketio.AsyncServer(
     cors_allowed_origins=origins
 )
 
-async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
-    global schema_id, user_id
-    
-    service_websocket.salvamento_agendado(data, user_id, schema_id)
+async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):    
+    # service_websocket.salvamento_agendado(data)
     
     logger.info(f"🚀 dados sendo emitidos...")
-    await sio.emit(channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
+    # await sio.emit(channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
 @sio.event
 async def connect(sid, environ, auth):
-    global schema_id, user_id
-    
     token = auth.get("token")
-    schema_id = auth.get("schema_id")
 
     schema_dict_id_email: str = get_current_user_WS(token)
-    user_id = schema_dict_id_email["id"]
+    
+    service_websocket.user_id = schema_dict_id_email["id"]
+    service_websocket.schema_id = auth.get("schema_id")
 
-    logger.info(f"✅ Usuário {user_id} conectado com sid {sid} e o schema id: {schema_id}")
+    logger.info(f"✅ Novo usuário conectado com sid {sid}")
     
 @sio.event
 async def create_table(sid, new_table: dict):
