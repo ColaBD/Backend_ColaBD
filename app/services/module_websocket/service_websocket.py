@@ -41,8 +41,8 @@ class ServiceWebsocket:
     
     def __preprocess_schema_received_data(self, received_data: BaseTable):
         #identificar pelo id, se existir concatena, se não existir adiciona
+        logger.error(f"oooooooooooooooooooo:          --"+ type(received_data))
         if (isinstance(received_data, CreateTable)):
-            logger.error(f"oooooooooooooooooooo:          --"+ type(received_data))
             self.__manipulate_create_table(received_data)
             
         elif (isinstance(received_data, DeleteTable)):
