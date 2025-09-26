@@ -44,6 +44,7 @@ class ServiceWebsocket:
         logger.error(f"oooooooooooooooooooo:          -- {received_data}")
         logger.error(f"oooooooooooooooooooo:          -- {type(received_data)}")
         if (isinstance(received_data, CreateTable)):
+            logger.error(f"entrou no create")
             self.__manipulate_create_table(received_data)
             
         elif (isinstance(received_data, DeleteTable)):

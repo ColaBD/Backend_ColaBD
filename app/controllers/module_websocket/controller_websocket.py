@@ -46,24 +46,32 @@ async def connect(sid, environ, auth):
     logger.info(f"✅ Usuário {user_id} conectado com sid {sid} e o schema id: {schema_id}")
     
 @sio.event
-async def create_table(sid, new_table: CreateTable):
+async def create_table(sid, new_table: dict):
     logger.info(f"📦 Criando tabela...")
-    await __salvamento_agendado(sid, "receive_new_table", new_table)
+    
+    new_table_obj = CreateTable(**new_table)
+    await __salvamento_agendado(sid, "receive_new_table", new_table_obj)
 
 @sio.event
-async def delete_table(sid, delete_table: DeleteTable):
+async def delete_table(sid, delete_table: dict):
     logger.info(f"⚠️ Deletando tabela...")
-    await __salvamento_agendado(sid, "receive_deleted_table", delete_table)
+    
+    delete_table_obj = DeleteTable(**delete_table)
+    await __salvamento_agendado(sid, "receive_deleted_table", delete_table_obj)
 
 @sio.event
-async def update_table_atributes(sid, updated_table: UpdateTable):
+async def update_table_atributes(sid, updated_table: dict):
     logger.info(f"🛠️ Atualizando tabela...")
-    await __salvamento_agendado(sid, "receive_updated_table", updated_table)
+    
+    updated_table_obj = UpdateTable(**updated_table)
+    await __salvamento_agendado(sid, "receive_updated_table", updated_table_obj)
 
 @sio.event
-async def move_table(sid, moved_table: MoveTable):
+async def move_table(sid, moved_table: dict):
     logger.info(f"👉 Movendo tabela...")
-    await __salvamento_agendado(sid, "receive_moved_table", moved_table)   
+    
+    moved_table_obj = MoveTable(**moved_table)
+    await __salvamento_agendado(sid, "receive_moved_table", moved_table_obj)   
     
 @sio.event
 async def disconnect(sid):
