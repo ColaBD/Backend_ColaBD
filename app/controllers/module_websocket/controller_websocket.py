@@ -31,7 +31,7 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
     service_websocket.salvamento_agendado(data, user_id, schema_id)
     
     logger.info(f"🚀 dados sendo emitidos...")
-    await sio.emit(channel_emit, data, skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
+    await sio.emit(channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
 @sio.event
 async def connect(sid, environ, auth):
