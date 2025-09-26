@@ -26,10 +26,10 @@ sio = socketio.AsyncServer(
 )
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
-    logger.error(f"ttttttttttttttttt.  ---  {schema_id}")
+    global schema_id
     service_websocket.salvamento_agendado(data, user_id, schema_id)
     
-    logger.info(f"📦 dados sendo emitidos...")
+    logger.info(f"🚀 dados sendo emitidos...")
     await sio.emit(channel_emit, data, skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
 @sio.event
@@ -49,19 +49,19 @@ async def create_table(sid, new_table: CreateTable):
 
 @sio.event
 async def delete_table(sid, delete_table: DeleteTable):
-    logger.info(f"📦 Criando tabela...")
+    logger.info(f"⚠️ Deletando tabela...")
     await __salvamento_agendado(sid, "receive_deleted_table", delete_table)
 
 @sio.event
 async def update_table_atributes(sid, updated_table: UpdateTable):
-    logger.info(f"📦 Criando tabela...")
+    logger.info(f"🛠️ Atualizando tabela...")
     await __salvamento_agendado(sid, "receive_updated_table", updated_table)
 
 @sio.event
 async def move_table(sid, moved_table: MoveTable):
-    logger.info(f"📦 Criando tabela...")
+    logger.info(f"👉 Movendo tabela...")
     await __salvamento_agendado(sid, "receive_moved_table", moved_table)   
     
 @sio.event
 async def disconnect(sid):
-    logger.info(f"📦 Cliente desconectado: {sid}")   
+    logger.info(f"⚠️ Cliente desconectado: {sid}")   
