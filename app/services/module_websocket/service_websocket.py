@@ -27,6 +27,9 @@ class ServiceWebsocket:
         self.cells.append(received_data.model_dump())
     
     def __manipulate_delete_table(self, received_data: DeleteTable):
+        if(self.cells.__len__() == 0):
+            return
+        
         index_exclusao = 0
         for i, item in enumerate(self.cells):
             if(item.get("id") == received_data.id):
