@@ -18,8 +18,8 @@ class ServiceWebsocket:
         
     async def populate_cells(self):
         # self.cells = self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]
-        a = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
-        logger.error(f"ppppppppppppppppppppppppp        {a.data["cells"]}")
+        cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
+        self.cells = cells_from_db.data["cells"].copy()
         
     def __manipulate_create_table(self, received_data: CreateTable):
         self.cells.append(received_data.model_dump())
