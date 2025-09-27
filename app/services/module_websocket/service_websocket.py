@@ -65,6 +65,7 @@ class ServiceWebsocket:
         # se já tinha uma task para esse schema, cancela
         if (self.schema_id in self.pending_updates):
             _, task = self.pending_updates[self.schema_id] # _ -> seria o snapshot_tabelas
+            logger.info(f"Cancelando o salvamento, porque o schema foi alterado novamente")
             task.cancel()
 
         task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
