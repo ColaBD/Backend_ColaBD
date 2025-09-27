@@ -18,11 +18,15 @@ class ServiceWebsocket:
         
     async def initialie_cells(self, isInitialize: bool):
         if (not isInitialize):
+            logger.error(f"Inicializando cells")
             self.cells = []
+            logger.error(f"Cells populadas {self.cells}")
             return
         
+        logger.error("Pegando cells do banco")
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
         self.cells = cells_from_db.data["cells"].copy()
+        logger.error(f"Cells populadas {self.cells}")
             
         
     def __manipulate_create_table(self, received_data: CreateTable):
