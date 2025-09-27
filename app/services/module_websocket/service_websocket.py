@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ServiceWebsocket:
     def __init__(self, service_schema: ServiceSchema):
-        self.pending_updates = dict[str, Any]
+        self.pending_updates: dict[str, Any] = {}
         self.schema_body = None
         self.service_schema = service_schema
         self.cells: list[dict[str, Any]] = []
