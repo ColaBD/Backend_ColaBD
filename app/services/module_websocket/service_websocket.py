@@ -17,7 +17,9 @@ class ServiceWebsocket:
         self.user_id = ""
         
     async def populate_cells(self):
-        # self.cells = self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)["data"]
+        if(self.cells.__len__() > 0):
+            return
+        
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
         self.cells = cells_from_db.data["cells"].copy()
         
