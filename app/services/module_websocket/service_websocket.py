@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ServiceWebsocket:
     def __init__(self, service_schema: ServiceSchema):
-        self.pending_updates = {}
+        self.pending_updates = dict[str, Any]
         self.schema_body = None
         self.service_schema = service_schema
         self.cells: list[dict[str, Any]] = []
@@ -67,22 +67,24 @@ class ServiceWebsocket:
             self.__manipulate_move_table(received_data)
 
     def salvamento_agendado(self, received_data: BaseTable):       
-        self.__preprocess_schema_received_data(received_data) 
-        
         # se já tinha uma task para esse schema, cancela
         if (self.schema_id in self.pending_updates):
-            _, task = self.pending_updates[self.schema_id] # _ -> seria o snapshot_tabelas
-            logger.info(f"Cancelando o salvamento, porque o schema foi alterado novamente")
-            task.cancel()
+            task = self.pending_updates[self.schema_id].get("task") 
+            
+            if (task):
+                logger.info(f"Cancelando o salvamento, porque o schema foi alterado novamente")
+                task.cancel()
+                
+            
+        self.__preprocess_schema_received_data(received_data) 
 
-        task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
+        self.pending_updates[self.schema_id] = {"cells": self.cells, "task": task}
         
-        self.pending_updates[self.schema_id] = (self.cells, task)
-        logger.error(f"Tabelasssssss  ---------------   {self.pending_updates[self.schema_id]}")
+        task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
 
     async def salvamento_com_atraso(self):
         try:
-            await asyncio.sleep(3) 
+            await asyncio.sleep(2) 
             
             if(self.schema_id == None or self.schema_id.strip() == ""):
                 logger.error(f"Schema ID é None, não é possível salvar o schema.")
