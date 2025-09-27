@@ -37,8 +37,8 @@ async def connect(sid, environ, auth):
     
     service_websocket.user_id = schema_dict_id_email["id"]
     service_websocket.schema_id = auth.get("schema_id")
-    
-    await service_websocket.populate_cells()
+
+    await service_websocket.initialie_cells(True)
 
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
     
@@ -72,4 +72,5 @@ async def move_table(sid, moved_table: dict):
     
 @sio.event
 async def disconnect(sid):
+    await service_websocket.initialie_cells(False)
     logger.info(f"⚠️ Cliente desconectado: {sid}")   

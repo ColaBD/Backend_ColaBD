@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import List, Dict, Any
+from typing import Any
 from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, MoveTable, BaseTable, UpdateTable
 from app.models.entities.module_schema.update_schema import UpdateSchemaData
 from app.services.module_schema.service_schema import ServiceSchema
@@ -12,16 +12,18 @@ class ServiceWebsocket:
         self.pending_updates = {}
         self.schema_body = None
         self.service_schema = service_schema
-        self.cells: List[Dict[str, Any]] = []
+        self.cells: list[dict[str, Any]] = []
         self.schema_id = ""
         self.user_id = ""
         
-    async def populate_cells(self):
-        if(self.cells.__len__() > 0):
+    async def initialie_cells(self, isInitialize: bool):
+        if (not isInitialize):
+            self.cells = []
             return
         
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
         self.cells = cells_from_db.data["cells"].copy()
+            
         
     def __manipulate_create_table(self, received_data: CreateTable):
         self.cells.append(received_data.model_dump())
@@ -67,7 +69,7 @@ class ServiceWebsocket:
     def salvamento_agendado(self, received_data: BaseTable):       
         self.__preprocess_schema_received_data(received_data) 
         
-        logger.error(f"Tabelasssssss  ---------------   {self.cells}")
+        logger.error(f"Tabelasssssss  ---------------   {self.pending_updates[self.schema_id]}")
 
         # se já tinha uma task para esse schema, cancela
         if (self.schema_id in self.pending_updates):

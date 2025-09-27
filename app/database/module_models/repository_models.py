@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Any
 from bson import ObjectId
 from pymongo.errors import PyMongoError
 from app.database.common.mongo_client import get_collection
@@ -13,7 +13,7 @@ class RepositoryModels:
     def __init__(self):
         self.collection = get_collection('models')
 
-    async def create(self, model_data: Dict[str, Any]) -> Response:
+    async def create(self, model_data: dict[str, Any]) -> Response:
         try:
             result = self.collection.insert_one(model_data)
             
@@ -70,7 +70,7 @@ class RepositoryModels:
             logger.error(f"Error while finding all models: {str(e)}")
             return Response(data=str(e), success=False)
 
-    async def update_by_id(self, model_id: str, update_data: Dict[str, Any]) -> Response:
+    async def update_by_id(self, model_id: str, update_data: dict[str, Any]) -> Response:
         try:
             object_id = ObjectId(model_id)
             
@@ -110,7 +110,7 @@ class RepositoryModels:
             logger.error(f"Error while deleting model: {str(e)}")
             return Response(data=str(e), success=False)
 
-    async def find_by_criteria(self, criteria: Dict[str, Any], limit: Optional[int] = None) -> Response:
+    async def find_by_criteria(self, criteria: dict[str, Any], limit: Optional[int] = None) -> Response:
         try:
             cursor = self.collection.find(criteria)
             
