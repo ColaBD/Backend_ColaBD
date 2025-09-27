@@ -78,9 +78,9 @@ class ServiceWebsocket:
             
         self.__preprocess_schema_received_data(received_data) 
 
-        self.pending_updates[self.schema_id] = {"cells": self.cells, "task": task}
-        
         task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
+        
+        self.pending_updates[self.schema_id] = {"cells": self.cells, "task": task}
 
     async def salvamento_com_atraso(self):
         try:
