@@ -66,6 +66,8 @@ class ServiceWebsocket:
 
     def salvamento_agendado(self, received_data: BaseTable):       
         self.__preprocess_schema_received_data(received_data) 
+        
+        logger.error(f"Tabelasssssss  ---------------   {self.cells}")
 
         # se já tinha uma task para esse schema, cancela
         if (self.schema_id in self.pending_updates):
