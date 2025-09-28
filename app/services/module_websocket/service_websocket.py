@@ -98,10 +98,6 @@ class ServiceWebsocket:
                 logger.error("User ID é None, não é possível salvar o schema.")
                 return
             
-            if (self.cells.__len__() == 0):
-                logger.error("Schema está vazio, não é possível salvar o schema.")
-                return
-            
             update_data = UpdateSchemaData(self.schema_id, self.cells)
             await self.service_schema.update_schema(update_data, self.user_id)
             
