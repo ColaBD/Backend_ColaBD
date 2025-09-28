@@ -24,7 +24,7 @@ sio = socketio.AsyncServer(
 )
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):    
-    service_websocket.salvamento_agendado(data)
+    await service_websocket.salvamento_agendado(data)
     
     logger.info(f"🚀 dados sendo emitidos...")
     await sio.emit(channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
@@ -38,7 +38,7 @@ async def connect(sid, environ, auth):
     service_websocket.user_id = schema_dict_id_email["id"]
     service_websocket.schema_id = auth.get("schema_id")
 
-    await service_websocket.initialie_cells(True)
+    await service_websocket.initialie_cells()
 
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
     
@@ -72,5 +72,4 @@ async def move_table(sid, moved_table: dict):
     
 @sio.event
 async def disconnect(sid):
-    await service_websocket.initialie_cells(False)
     logger.info(f"⚠️ Cliente desconectado: {sid}")   

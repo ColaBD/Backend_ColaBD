@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class BaseTable(BaseModel):
     id: str
@@ -95,3 +95,7 @@ class LinkTable(BaseTable):
     connector: Optional[LinkConnector] = None
     labels: list[Label] = []
     attrs: Optional[LinkAttrs] = None
+    
+class SchemaUpdates(BaseModel):
+    cells: list[dict[str, Any]] = Field(default_factory=list)
+    task: Any | None = None
