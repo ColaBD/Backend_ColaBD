@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from typing import Any
-from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, MoveTable, BaseTable, UpdateTable
+from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseTable, UpdateTable
 from app.models.entities.module_schema.update_schema import UpdateSchemaData
 from app.services.module_schema.service_schema import ServiceSchema
 
@@ -47,16 +47,27 @@ class ServiceWebsocket:
     def __manipulate_update_table(self, received_data: UpdateTable):
         for i, item in enumerate(self.cells):
             if(item.get("id") == received_data.id):
-                item["attrs"] = received_data.attrs = received_data.attrs
+                if ("attrs" not in item):
+                    item["attrs"] = {}
+                item["attrs"].update(received_data.attrs)
                 break
     
     def __manipulate_move_table(self, received_data: MoveTable):
-        for i, item in enumerate(self.cells):
+        for item in self.cells:
             if(item.get("id") == received_data.id):
-                item["position"]["x"] = received_data.x
-                item["position"]["y"] = received_data.y
+                item["position"]["x"] = received_data.position.x
+                item["position"]["y"] = received_data.position.y
                 break
     
+    # def __manipulate_create_link(self, received_data: LinkTable):
+    #     self.cells.append(received_data.model_dump())
+
+    # def __manipulate_update_link(self, received_data: LinkTable):
+    #     for i, item in enumerate(self.cells):
+    #         if item.get("id") == received_data.id:
+    #             item.update(received_data.model_dump())
+    #             break
+        
     def __preprocess_schema_received_data(self, received_data: BaseTable):
         if (isinstance(received_data, CreateTable)):
             self.__manipulate_create_table(received_data)
@@ -69,6 +80,9 @@ class ServiceWebsocket:
             
         elif (isinstance(received_data, MoveTable)):
             self.__manipulate_move_table(received_data)
+            
+        elif (isinstance(received_data, LinkTable)):
+            self.__manipulate_create_link(received_data)
 
     def salvamento_agendado(self, received_data: BaseTable):       
         # se já tinha uma task para esse schema, cancela
