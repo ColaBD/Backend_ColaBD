@@ -17,11 +17,12 @@ class ServiceWebsocket:
     async def initialie_cells(self):       
         logger.info("---- Populando Cells ----")
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
-
+        cells_dict = cells_from_db.model_dump()
+        
         if (self.schema_id not in self.pending_updates):
             self.pending_updates[self.schema_id] = SchemaUpdates(cells=[], task=None)
             
-        self.pending_updates[self.schema_id].cells = cells_from_db.data["cells"].copy()
+        self.pending_updates[self.schema_id].cells = cells_dict["cells"].copy()
             
         
     def __manipulate_create_table(self, received_data: CreateTable):
