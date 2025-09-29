@@ -17,14 +17,11 @@ class ServiceWebsocket:
     async def initialie_cells(self):       
         logger.info("---- Populando Cells ----")
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
-        logger.info(f"---- Cellsssssssssssssssssssssssssss |{cells_from_db.data}| ----")
-        if (cells_from_db.data["cells"]):
-            logger.info("---- Pegndo do banco ----")
-            self.pending_updates[self.schema_id].cells = cells_from_db.data["cells"].copy()
-            return
 
-        logger.info("---- Criando uma nova ----")
-        self.pending_updates[self.schema_id].cells = []
+        if (self.schema_id not in self.pending_updates):
+            self.pending_updates[self.schema_id] = SchemaUpdates(cells=[], task=None)
+            
+        self.pending_updates[self.schema_id].cells = cells_from_db.data["cells"].copy()
             
         
     def __manipulate_create_table(self, received_data: CreateTable):
