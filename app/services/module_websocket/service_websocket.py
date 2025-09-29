@@ -19,10 +19,9 @@ class ServiceWebsocket:
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
         cells_dict = cells_from_db.model_dump()
         
-        logger.info(f"aaaaaaaaaaac         {cells_dict}")
-        
-        if (self.schema_id not in self.pending_updates):
+        if (self.schema_id not in self.pending_updates or not cells_dict["data"]["success"]):
             self.pending_updates[self.schema_id] = SchemaUpdates(cells=[], task=None)
+            return
             
         self.pending_updates[self.schema_id].cells = cells_dict["data"]["cells"].copy()
             
