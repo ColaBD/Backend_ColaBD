@@ -22,7 +22,7 @@ class ServiceWebsocket:
         if (self.schema_id not in self.pending_updates):
             self.pending_updates[self.schema_id] = SchemaUpdates(cells=[], task=None)
             
-        self.pending_updates[self.schema_id].cells = cells_dict["cells"].copy()
+        self.pending_updates[self.schema_id].cells = cells_dict["data"]["cells"].copy()
             
         
     def __manipulate_create_table(self, received_data: CreateTable):
