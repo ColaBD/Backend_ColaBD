@@ -18,7 +18,7 @@ class ServiceWebsocket:
         logger.info("---- Populando Cells ----")
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
         cells_dict = cells_from_db.model_dump()
-        logger.info(f"---- Cellssssssssssss |{cells_dict}| ----")
+
         if (self.schema_id not in self.pending_updates or not cells_dict["success"]):
             self.pending_updates[self.schema_id] = SchemaUpdates(cells=[], task=None)
             return
@@ -86,6 +86,8 @@ class ServiceWebsocket:
         if (self.schema_id not in self.pending_updates):
             self.pending_updates[self.schema_id] = SchemaUpdates()
             
+        self.__preprocess_schema_received_data(received_data) 
+            
         task = self.pending_updates[self.schema_id].task 
         if (task):
             logger.info(f"---- Cancelando o salvamento, porque o schema foi alterado novamente ----")
@@ -94,8 +96,6 @@ class ServiceWebsocket:
                 await task
             except asyncio.CancelledError:
                 pass
-                
-        self.__preprocess_schema_received_data(received_data) 
 
         self.pending_updates[self.schema_id].task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
 
