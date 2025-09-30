@@ -3,6 +3,7 @@ from app.database.common.supabase_client import get_supabase_client
 from supabase import Client
 from fastapi import UploadFile
 from supabase import create_client
+from app.database.common.supabase_public_url import build_public_url
 import logging
 import os
 
@@ -251,6 +252,14 @@ class RepositorySchema:
                 except Exception as e:
                     continue  
             
+            # As fallback, return a public URL if object exists and bucket policy allows public
+            try:
+                for extension in extensions:
+                    file_path = f"{schema_id}.{extension}"
+                    public_url = build_public_url("schemas-storage", file_path)
+                    return Response(data=public_url, success=True)
+            except Exception:
+                pass
             return Response(data=None, success=True)
         
         except Exception as e:
