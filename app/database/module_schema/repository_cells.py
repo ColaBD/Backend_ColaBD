@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from bson import ObjectId
 from pymongo.errors import PyMongoError
 from pymongo.collection import Collection
@@ -21,7 +21,7 @@ class RepositoryCells:
             self.collection = get_collection('models')  # Changed from 'cells' to 'models'
         return self.collection
 
-    async def create_cells(self, cells_data: Dict[str, Any]) -> Response:
+    async def create_cells(self, cells_data: dict[str, Any]) -> Response:
         try:
             # Create cells model with timestamps
             cells_model = CellsModel(**cells_data)
@@ -62,7 +62,7 @@ class RepositoryCells:
             logger.error(f"Error while getting cells by ID: {str(e)}")
             return Response(data=str(e), success=False)
 
-    async def update_cells_by_id(self, cells_id: str, cells_data: Dict[str, Any]) -> Response:
+    async def update_cells_by_id(self, cells_id: str, cells_data: dict[str, Any]) -> Response:
         try:
             object_id = ObjectId(cells_id)
             

@@ -1,13 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.jwt import decode_access_token
-from typing import Dict
 
 # Security scheme for JWT Bearer token
 security = HTTPBearer()
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     return get_token_decoded(credentials.credentials)
     
 def get_current_user_WS(user_token: str) -> str:
@@ -25,5 +24,5 @@ def get_token_decoded(token: str):
     
     return result.data
 
-def get_current_user_id(current_user: Dict = Depends(get_current_user)) -> str:
+def get_current_user_id(current_user: dict = Depends(get_current_user)) -> str:
     return current_user["id"]
