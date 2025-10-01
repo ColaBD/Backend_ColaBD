@@ -15,6 +15,7 @@ service_websocket = ServiceWebsocket(service_schema=service_schema)
 origins = [
   "http://localhost:4200",
   "https://colabd.onrender.com",
+  "https://backend-colabd.onrender.com"
   "https://develop-colabd.onrender.com"
 ]
 
