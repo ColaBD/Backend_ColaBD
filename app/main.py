@@ -6,18 +6,24 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers.module_auth.controller_auth import router as user_route
 from app.controllers.module_schema.controller_schema import router as schema_route
+from app.controllers.module_sql.controller_sql import router as sql_route
+from app.controllers.module_websocket.controller_websocket import sio 
 from app.database.common.database_manager import db_manager
 
 import logging
+import socketio
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('    ')
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("pymongo").setLevel(logging.ERROR)
 
 app = FastAPI( 
   title="ColaBD API",
   description="API para o desenvolvimento do ColaBD",
   version="1.0.0",
 )
+
+socket_app = socketio.ASGIApp(sio, app)
 
 origins = [
   "http://localhost:4200",
@@ -35,6 +41,7 @@ app.add_middleware(
 # ---- Endpoints da aplicação ----
 app.include_router(user_route)
 app.include_router(schema_route)
+app.include_router(sql_route)
 # --------------------------------
 
 @app.on_event("startup")
@@ -53,4 +60,3 @@ async def encerrandoAPP():
 async def docs():
   logger.info('redirecionando para o swagger')
   return RedirectResponse(url="/docs")
-

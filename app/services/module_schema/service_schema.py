@@ -3,9 +3,11 @@ import asyncio
 import logging
 from app.database.module_schema.repository_schema import RepositorySchema
 from app.database.module_schema.repository_cells import RepositoryCells
+from app.database.module_user.repository_user import RepositoryUser
 from app.models.dto.compartilhado.response import Response
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class ServiceSchema:
@@ -13,6 +15,7 @@ class ServiceSchema:
     def __init__(self):
         self.repo_schema = RepositorySchema()
         self.repo_cells = RepositoryCells()
+        self.repo_user = RepositoryUser()
     
     async def get_all_schemas(self) -> Response:
         try:
@@ -124,7 +127,7 @@ class ServiceSchema:
                 logger.error(f"Service: Schema not found: {schema_result.data}")
                 return Response(data="Schema não encontrado", success=False)
             logger.info("Service: Schema found successfully")
-
+            
             logger.info("Service: Step 2 - Verifying user permissions")
             user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
             if not user_schemas_result.success:
@@ -218,8 +221,13 @@ class ServiceSchema:
         except Exception as e:
             return Response(data=str(e), success=False)
         
-    async def delete_schema(self, schema_id: str):
-        try:           
+    async def delete_schema(self, schema_id: str, current_user_id:str):
+        try:     
+            user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
+            if not user_schemas_result.success:
+                logger.error(f"Service Error. checking permissions for: {user_schemas_result.data}")
+                return Response(data="Erro ao verificar permissões do usuário", success=False)
+                  
             schema_result = await self.repo_schema.get_schema_by_id(schema_id)
             if not schema_result.success:
                 logger.error(f"Service: Schema not found: {schema_result.data}")
@@ -233,8 +241,13 @@ class ServiceSchema:
         except Exception as e:
             return Response(data=str(e), success=False)
         
-    async def update_schema_title(self, schema_id: str, new_title: str) -> Response:
+    async def update_schema_title(self, schema_id: str, new_title: str, current_user_id: str) -> Response:
         try:
+            user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
+            if not user_schemas_result.success:
+                logger.error(f"Service Error. checking permissions for: {user_schemas_result.data}")
+                return Response(data="Erro ao verificar permissões do usuário", success=False)
+            
             schema_result = await self.repo_schema.get_schema_by_id(schema_id)
             if not schema_result.success:
                 logger.error(f"Service: Schema not found: {schema_result.data}")
@@ -246,4 +259,69 @@ class ServiceSchema:
             
             return Response(data=update_result.data, success=True)
         except Exception as e:
+            return Response(data=str(e), success=False)
+
+    async def vinculate_user_to_schema(self, schema_id: str, user_email: str, current_user_id: str) -> Response:
+        """Vinculate a user to a schema by email."""
+        try:
+            logger.info(f"Service: Vinculando usuário {user_email} ao schema {schema_id}")
+            
+            # Step 1: Verify if current user has access to this schema
+            user_schemas_result = await self.repo_schema.get_by_user_id(current_user_id)
+            if not user_schemas_result.success:
+                return Response(data="Erro ao verificar permissões do usuário", success=False)
+            
+            user_schema_ids = [us["schema_id"] for us in user_schemas_result.data]
+            if schema_id not in user_schema_ids:
+                return Response(data="Acesso negado: você não tem permissão para vincular usuários a este schema", success=False)
+            
+            # Step 2: Find user by email
+            class UserEmailData:
+                def __init__(self, email: str):
+                    self.email = email
+            
+            user_email_obj = UserEmailData(user_email)
+            user_result = await self.repo_user.selectOne(user_email_obj)
+            
+            if not user_result.success:
+                return Response(data=f"Usuário com email {user_email} não encontrado", success=False)
+            
+            user_data = user_result.data
+            user_id = user_data["id"]
+            
+            logger.info(f"Service: Usuário encontrado - ID: {user_id}, Email: {user_email}")
+            
+            # Step 3: Check if user is already linked to this schema
+            existing_link_result = await self.repo_schema.get_by_schema_id(schema_id)
+            if existing_link_result.success:
+                existing_user_ids = [link["user_id"] for link in existing_link_result.data]
+                if user_id in existing_user_ids:
+                    return Response(data="Usuário já está vinculado a este schema", success=False)
+            
+            # Step 4: Create user-schema association
+            user_schema_dict = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "schema_id": schema_id
+            }
+            
+            create_result = await self.repo_schema.create_user_schema(user_schema_dict)
+            
+            if not create_result.success:
+                return Response(data=f"Erro ao vincular usuário ao schema: {create_result.data}", success=False)
+            
+            logger.info(f"Service: Usuário {user_email} vinculado com sucesso ao schema {schema_id}")
+            
+            return Response(
+                data={
+                    "message": f"Usuário {user_email} vinculado com sucesso ao schema",
+                    "user_id": user_id,
+                    "schema_id": schema_id,
+                    "user_email": user_email
+                }, 
+                success=True
+            )
+            
+        except Exception as e:
+            logger.error(f"Service: Erro ao vincular usuário: {str(e)}")
             return Response(data=str(e), success=False)

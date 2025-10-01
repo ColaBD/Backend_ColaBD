@@ -1,0 +1,123 @@
+import asyncio
+import logging
+from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseTable, SchemaUpdates, UpdateTable
+from app.models.entities.module_schema.update_schema import UpdateSchemaData
+from app.services.module_schema.service_schema import ServiceSchema
+
+logger = logging.getLogger(__name__)
+
+class ServiceWebsocket:
+    def __init__(self, service_schema: ServiceSchema):
+        self.pending_updates: dict[str, SchemaUpdates] = {}
+
+        self.service_schema = service_schema
+        self.schema_id = ""
+        self.user_id = ""
+        
+    async def initialie_cells(self):       
+        logger.info("---- Populando Cells ----")
+        cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
+        cells_dict = cells_from_db.model_dump()
+
+        if (self.schema_id not in self.pending_updates or not cells_dict["success"]):
+            self.pending_updates[self.schema_id] = SchemaUpdates(cells=[], task=None)
+            return
+            
+        self.pending_updates[self.schema_id].cells = cells_dict["data"]["cells"].copy()
+            
+        
+    def __manipulate_create_table(self, received_data: CreateTable):
+        self.pending_updates[self.schema_id].cells.append(received_data.model_dump())
+    
+    def __manipulate_delete_table(self, received_data: DeleteTable):
+        if(len(self.pending_updates[self.schema_id].cells) == 0):
+            return
+        
+        index_exclusao = 0
+        for i, item in enumerate(self.pending_updates[self.schema_id].cells):
+            if(item["id"] == received_data.id):
+                index_exclusao = i
+                break
+                
+        self.pending_updates[self.schema_id].cells.pop(index_exclusao)
+    
+    def __manipulate_update_table(self, received_data: UpdateTable):
+        for item in self.pending_updates[self.schema_id].cells:
+            if(item["id"] == received_data.id):
+                if ("attrs" not in item):
+                    item["attrs"] = {}
+                    
+                item["attrs"] = received_data.attrs
+                break
+    
+    def __manipulate_move_table(self, received_data: MoveTable):
+        for item in self.pending_updates[self.schema_id].cells:
+            if(item["id"] == received_data.id):
+                item["position"]["x"] = received_data.position.x
+                item["position"]["y"] = received_data.position.y
+                break
+    
+    # def __manipulate_create_link(self, received_data: LinkTable):
+    #     self.cells.append(received_data.model_dump())
+
+    # def __manipulate_update_link(self, received_data: LinkTable):
+    #     for i, item in enumerate(self.cells):
+    #         if item.get("id") == received_data.id:
+    #             item.update(received_data.model_dump())
+    #             break
+        
+    def __preprocess_schema_received_data(self, received_data: BaseTable):
+        if (isinstance(received_data, CreateTable)):
+            self.__manipulate_create_table(received_data)
+            
+        elif (isinstance(received_data, DeleteTable)):
+            self.__manipulate_delete_table(received_data)
+            
+        elif (isinstance(received_data, UpdateTable)):
+            self.__manipulate_update_table(received_data)
+            
+        elif (isinstance(received_data, MoveTable)):
+            self.__manipulate_move_table(received_data)
+            
+        # elif (isinstance(received_data, LinkTable)):
+        #     self.__manipulate_create_link(received_data)
+
+    async def salvamento_agendado(self, received_data: BaseTable):       
+        if (self.schema_id not in self.pending_updates):
+            self.pending_updates[self.schema_id] = SchemaUpdates()
+            
+        self.__preprocess_schema_received_data(received_data) 
+            
+        task = self.pending_updates[self.schema_id].task 
+        if (task):
+            logger.info(f"---- Cancelando o salvamento, porque o schema foi alterado novamente ----")
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+        self.pending_updates[self.schema_id].task = asyncio.create_task(self.salvamento_com_atraso()) # -> cria um multiprocess em paralelo para ficar rodar o metodo salvamento_com_atraso
+
+    async def salvamento_com_atraso(self):
+        try:
+            #enquanto não é usado redis deve esperar um determinado tempo para persistir no banco, porém caso alguem entre nesse intervalo de tempo ficará com as tabelas desatualizadas
+            #quando começar a usar o redis criar um worker que irá fazer essa comunicação de pegar os dados do redis e mandar para o supabase
+            await asyncio.sleep(2) 
+            
+            logger.info(f'---- Salvandooooo ----')
+            if(self.schema_id == None or self.schema_id.strip() == ""):
+                logger.error(f"Schema ID é None, não é possível salvar o schema.")
+                return
+            
+            if(self.user_id == None or self.user_id.strip() == ""):
+                logger.error("User ID é None, não é possível salvar o schema.")
+                return
+            
+            update_data = UpdateSchemaData(self.schema_id, self.pending_updates[self.schema_id].cells)
+            await self.service_schema.update_schema(update_data, self.user_id)
+            
+            logger.info(f"Schema {self.schema_id} salvo no banco!")
+        except asyncio.CancelledError:
+            logger.info(f"Operação cancelada, pois o schema foi alterado")
+            return

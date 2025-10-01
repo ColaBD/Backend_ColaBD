@@ -1,12 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends, Form, File, UploadFile
-from typing import Optional, List, Dict, Any
+from typing import Optional
 import json
 import logging
+
+from app.models.entities.module_schema.update_schema import UpdateSchemaData
 
 logger = logging.getLogger(__name__)
 
 from app.models.dto.compartilhado.response import Response
 from app.models.dto.module_schema.create_schema import CreateSchema
+from app.models.dto.module_schema.vinculate_schema import VinculateSchema
 from app.models.dto.module_schema.update_schema_title import UpdateSchemaTitle
 from app.services.module_schema.service_schema import ServiceSchema
 from app.core.auth import get_current_user_id
@@ -19,7 +22,6 @@ router = APIRouter(
 
 # Initialize service
 service_schema = ServiceSchema()
-
 
 def http_exception(result, status=500):
     raise HTTPException(detail=result.data, status_code=status)
@@ -63,6 +65,21 @@ async def create_schema(schema_data: CreateSchema, current_user_id: str = Depend
     
     return Response(data=result.data, success=True)
 
+
+@router.patch("/", response_model=Response)
+async def vinculate_schema(schema_data: VinculateSchema, current_user_id: str = Depends(get_current_user_id)):
+    """Vinculate a user to a schema by email."""
+    result = await service_schema.vinculate_user_to_schema(
+        schema_data.schema_id, 
+        schema_data.user_email, 
+        current_user_id
+    )
+
+    if not result.success:
+        http_exception(result, 400)
+
+    return Response(data=result.data, success=True)
+
 @router.put("/", response_model=Response)
 async def update_schema(
     schema_id: str = Form(...),
@@ -81,11 +98,6 @@ async def update_schema(
         logger.info(f"Successfully parsed {len(cells_data)} cells")
         
         # Create UpdateSchema object manually since we're using Form data
-        class UpdateSchemaData:
-            def __init__(self, schema_id: str, cells: List[Dict[str, Any]]):
-                self.schema_id = schema_id
-                self.cells = cells
-        
         update_data = UpdateSchemaData(schema_id, cells_data)
         
         # Call service with display_picture parameter
@@ -107,8 +119,8 @@ async def update_schema(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/title/{schema_id}", response_model=Response)
-async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle):
-    result = await service_schema.update_schema_title(schema_id, schema_title.new_title)
+async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle, current_user_id: str = Depends(get_current_user_id)):
+    result = await service_schema.update_schema_title(schema_id, schema_title.new_title, current_user_id)
     
     if not result.success:
         http_exception(result, 500)
@@ -116,8 +128,8 @@ async def update_schema_title(schema_id: str, schema_title: UpdateSchemaTitle):
     return Response(data=result.data, success=True)
 
 @router.delete("/{schema_id}", response_model=Response)
-async def delete_schema(schema_id: str):
-    result = await service_schema.delete_schema(schema_id)
+async def delete_schema(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
+    result = await service_schema.delete_schema(schema_id, current_user_id)
     
     if not result.success:
         http_exception(result, 404)
