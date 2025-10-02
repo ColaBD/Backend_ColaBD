@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 service_schema = ServiceSchema()
 service_websocket = ServiceWebsocket(service_schema=service_schema)
+schema_id = ""
 
 origins = [
   "http://localhost:4200",
@@ -31,39 +32,41 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
 
 @sio.event
 async def connect(sid, environ, auth):
+    global schema_id
     token = auth.get("token")
 
     schema_dict_id_email: str = get_current_user_WS(token)
     
     service_websocket.user_id = schema_dict_id_email["id"]
     service_websocket.schema_id = auth.get("schema_id")
+    schema_id = auth.get("schema_id")
 
     await service_websocket.initialie_cells()
 
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
     
-@sio.event
+@sio.event(f"create_table_{schema_id}")
 async def create_table(sid, new_table: dict):
     logger.info(f"📦 Criando tabela...")
     
     new_table_obj = CreateTable(**new_table)
     await __salvamento_agendado(sid, "receive_new_table", new_table_obj)
 
-@sio.event
+@sio.event(f"delete_table_{schema_id}")
 async def delete_table(sid, delete_table: dict):
     logger.info(f"⚠️ Deletando tabela...")
     
     delete_table_obj = DeleteTable(**delete_table)
     await __salvamento_agendado(sid, "receive_deleted_table", delete_table_obj)
 
-@sio.event
+@sio.event(f"update_table_atributes_{schema_id}")
 async def update_table_atributes(sid, updated_table: dict):
     logger.info(f"🛠️ Atualizando tabela...")
     
     updated_table_obj = UpdateTable(**updated_table)
     await __salvamento_agendado(sid, "receive_updated_table", updated_table_obj)
 
-@sio.event
+@sio.event(f"move_table_{schema_id}")
 async def move_table(sid, moved_table: dict):
     logger.info(f"👉 Movendo tabela...")
     
