@@ -25,11 +25,22 @@ sio = socketio.AsyncServer(
 )
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):    
+    global schema_id
     await service_websocket.salvamento_agendado(data)
     
     logger.info(f"🚀 dados sendo emitidos...")
-    await sio.emit(channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
+    full_name_channel_emit = channel_emit + schema_id
+    
+    await sio.emit(full_name_channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
+def __create_dinamic_endpoint_name():
+    global schema_id
+
+    sio.on(f"create_table_{schema_id}")(create_table)
+    sio.on(f"delete_table_{schema_id}")(delete_table)
+    sio.on(f"update_table_atributes_{schema_id}")(update_table_atributes)
+    sio.on(f"move_table_{schema_id}")(move_table)
+    
 @sio.event
 async def connect(sid, environ, auth):
     global schema_id
@@ -40,33 +51,31 @@ async def connect(sid, environ, auth):
     service_websocket.user_id = schema_dict_id_email["id"]
     service_websocket.schema_id = auth.get("schema_id")
     schema_id = auth.get("schema_id")
+    
+    __create_dinamic_endpoint_name()
 
     await service_websocket.initialie_cells()
 
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
-    
-@sio.event(f"create_table_{schema_id}")
+
 async def create_table(sid, new_table: dict):
     logger.info(f"📦 Criando tabela...")
     
     new_table_obj = CreateTable(**new_table)
     await __salvamento_agendado(sid, "receive_new_table", new_table_obj)
 
-@sio.event(f"delete_table_{schema_id}")
 async def delete_table(sid, delete_table: dict):
     logger.info(f"⚠️ Deletando tabela...")
     
     delete_table_obj = DeleteTable(**delete_table)
     await __salvamento_agendado(sid, "receive_deleted_table", delete_table_obj)
 
-@sio.event(f"update_table_atributes_{schema_id}")
 async def update_table_atributes(sid, updated_table: dict):
     logger.info(f"🛠️ Atualizando tabela...")
     
     updated_table_obj = UpdateTable(**updated_table)
     await __salvamento_agendado(sid, "receive_updated_table", updated_table_obj)
 
-@sio.event(f"move_table_{schema_id}")
 async def move_table(sid, moved_table: dict):
     logger.info(f"👉 Movendo tabela...")
     
