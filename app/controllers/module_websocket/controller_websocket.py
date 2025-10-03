@@ -35,6 +35,8 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
 
 def __create_dinamic_endpoint_name():
     global schema_id
+    
+    logger.info("wwwwwwwwww       "+schema_id)
 
     sio.on(f"create_table_{schema_id}")(create_table)
     sio.on(f"delete_table_{schema_id}")(delete_table)
