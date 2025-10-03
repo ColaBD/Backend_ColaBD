@@ -29,14 +29,12 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
     await service_websocket.salvamento_agendado(data)
     
     logger.info(f"🚀 dados sendo emitidos...")
-    full_name_channel_emit = channel_emit + schema_id
+    full_name_channel_emit = f"{channel_emit}_{schema_id}"
     
     await sio.emit(full_name_channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
 def __create_dinamic_endpoint_name():
     global schema_id
-    
-    logger.info("wwwwwwwwww       "+schema_id)
 
     sio.on(f"create_table_{schema_id}")(create_table)
     sio.on(f"delete_table_{schema_id}")(delete_table)
