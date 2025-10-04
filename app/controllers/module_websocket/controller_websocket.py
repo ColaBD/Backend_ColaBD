@@ -46,7 +46,7 @@ async def connect(sid, environ, auth):
 
     user_id: str = get_current_user_WS(token)["id"]
     
-    logger.info("=-=--==-=--==--==-=-=--==-=-==-=-=            ",user_id)
+    logger.info("=-=--==-=--==--==-=-=--==-=-==-=-=            " + user_id)
     
     service_websocket.user_id = user_id
     service_websocket.schema_id = schema_id
