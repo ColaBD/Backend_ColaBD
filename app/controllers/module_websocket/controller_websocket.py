@@ -84,4 +84,5 @@ async def move_table(sid, moved_table: dict):
     
 @sio.event
 async def disconnect(sid):
+    user_sid_schemaId.pop(sid)
     logger.info(f"⚠️ Cliente desconectado: {sid}")   
