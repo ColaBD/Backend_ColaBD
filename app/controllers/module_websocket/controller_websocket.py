@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 service_schema = ServiceSchema()
 service_websocket = ServiceWebsocket(service_schema=service_schema)
-schema_id = ""
+user_sid_schemaId: dict[str, str] = {}
 
 origins = [
   "http://localhost:4200",
@@ -25,17 +25,15 @@ sio = socketio.AsyncServer(
 )
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):    
-    global schema_id
+    schema_id = user_sid_schemaId[sid]
     await service_websocket.salvamento_agendado(data)
     
-    logger.info(f"🚀 dados sendo emitidos...")
     full_name_channel_emit = f"{channel_emit}_{schema_id}"
+    logger.info(f"🚀 dados sendo emitidos pelo canal {full_name_channel_emit}...")
     
     await sio.emit(full_name_channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
-def __create_dinamic_endpoint_name():
-    global schema_id
-
+def __create_dinamic_endpoint_name(schema_id):
     sio.on(f"create_table_{schema_id}")(create_table)
     sio.on(f"delete_table_{schema_id}")(delete_table)
     sio.on(f"update_table_atributes_{schema_id}")(update_table_atributes)
@@ -43,16 +41,18 @@ def __create_dinamic_endpoint_name():
     
 @sio.event
 async def connect(sid, environ, auth):
-    global schema_id
     token = auth.get("token")
-
-    schema_dict_id_email: str = get_current_user_WS(token)
-    
-    service_websocket.user_id = schema_dict_id_email["id"]
-    service_websocket.schema_id = auth.get("schema_id")
     schema_id = auth.get("schema_id")
+
+    user_id: str = get_current_user_WS(token)["id"]
     
-    __create_dinamic_endpoint_name()
+    logger.info("=-=--==-=--==--==-=-=--==-=-==-=-=            ",user_id)
+    
+    service_websocket.user_id = user_id
+    service_websocket.schema_id = schema_id
+    user_sid_schemaId[sid] = schema_id
+    
+    __create_dinamic_endpoint_name(schema_id)
 
     await service_websocket.initialie_cells()
 
