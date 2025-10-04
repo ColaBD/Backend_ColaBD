@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers.module_auth.controller_auth import router as user_route
 from app.controllers.module_schema.controller_schema import router as schema_route
+from app.controllers.module_sql.controller_sql import router as sql_route
 from app.controllers.module_websocket.controller_websocket import sio 
 from app.database.common.database_manager import db_manager
 
@@ -40,6 +41,7 @@ app.add_middleware(
 # ---- Endpoints da aplicação ----
 app.include_router(user_route)
 app.include_router(schema_route)
+app.include_router(sql_route)
 # --------------------------------
 
 @app.on_event("startup")
