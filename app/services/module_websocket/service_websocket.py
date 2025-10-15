@@ -15,7 +15,6 @@ class ServiceWebsocket:
         self.user_id = ""
         
     async def initialie_cells(self):       
-        logger.info("---- Populando Cells ----")
         cells_from_db = await self.service_schema.get_schema_with_cells(self.schema_id, self.user_id)
         cells_dict = cells_from_db.model_dump()
 
@@ -26,10 +25,10 @@ class ServiceWebsocket:
         self.pending_updates[self.schema_id].cells = cells_dict["data"]["cells"].copy()
             
         
-    def __manipulate_create_table(self, received_data: CreateTable):
+    def __manipulate_create_element(self, received_data: CreateTable):
         self.pending_updates[self.schema_id].cells.append(received_data.model_dump())
     
-    def __manipulate_delete_table(self, received_data: DeleteTable):
+    def __manipulate_delete_element(self, received_data: DeleteTable):
         if(len(self.pending_updates[self.schema_id].cells) == 0):
             return
         
@@ -56,31 +55,19 @@ class ServiceWebsocket:
                 item["position"]["x"] = received_data.position.x
                 item["position"]["y"] = received_data.position.y
                 break
-    
-    # def __manipulate_create_link(self, received_data: LinkTable):
-    #     self.cells.append(received_data.model_dump())
-
-    # def __manipulate_update_link(self, received_data: LinkTable):
-    #     for i, item in enumerate(self.cells):
-    #         if item.get("id") == received_data.id:
-    #             item.update(received_data.model_dump())
-    #             break
         
     def __preprocess_schema_received_data(self, received_data: BaseTable):
         if (isinstance(received_data, CreateTable)):
-            self.__manipulate_create_table(received_data)
+            self.__manipulate_create_element(received_data)
             
         elif (isinstance(received_data, DeleteTable)):
-            self.__manipulate_delete_table(received_data)
+            self.__manipulate_delete_element(received_data)
             
         elif (isinstance(received_data, UpdateTable)):
             self.__manipulate_update_table(received_data)
             
         elif (isinstance(received_data, MoveTable)):
             self.__manipulate_move_table(received_data)
-            
-        # elif (isinstance(received_data, LinkTable)):
-        #     self.__manipulate_create_link(received_data)
 
     async def salvamento_agendado(self, received_data: BaseTable):       
         if (self.schema_id not in self.pending_updates):
@@ -104,8 +91,7 @@ class ServiceWebsocket:
             #enquanto não é usado redis deve esperar um determinado tempo para persistir no banco, porém caso alguem entre nesse intervalo de tempo ficará com as tabelas desatualizadas
             #quando começar a usar o redis criar um worker que irá fazer essa comunicação de pegar os dados do redis e mandar para o supabase
             await asyncio.sleep(2) 
-            
-            logger.info(f'---- Salvandooooo ----')
+
             if(self.schema_id == None or self.schema_id.strip() == ""):
                 logger.error(f"Schema ID é None, não é possível salvar o schema.")
                 return

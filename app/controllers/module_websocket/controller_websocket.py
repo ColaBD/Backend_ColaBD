@@ -16,8 +16,6 @@ user_sid_schemaId: dict[str, str] = {}
 origins = [
   "http://localhost:4200",
   "https://colabd.onrender.com",
-  "https://backend-colabd.onrender.com"
-  "https://develop-colabd.onrender.com"
 ]
 
 sio = socketio.AsyncServer(
@@ -35,8 +33,8 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):
     await sio.emit(full_name_channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
 def __create_dinamic_endpoint_name(schema_id):
-    sio.on(f"create_table_{schema_id}")(create_table)
-    sio.on(f"delete_table_{schema_id}")(delete_table)
+    sio.on(f"create_element_{schema_id}")(create_table)
+    sio.on(f"delete_element_{schema_id}")(delete_table)
     sio.on(f"update_table_atributes_{schema_id}")(update_table_atributes)
     sio.on(f"move_table_{schema_id}")(move_table)
     
@@ -58,16 +56,16 @@ async def connect(sid, environ, auth):
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
 
 async def create_table(sid, new_table: dict):
-    logger.info(f"📦 Criando tabela...")
+    logger.info(f"📦 Criando tabela/link...")
     
     new_table_obj = CreateTable(**new_table)
-    await __salvamento_agendado(sid, "receive_new_table", new_table_obj)
+    await __salvamento_agendado(sid, "receive_new_element", new_table_obj)
 
 async def delete_table(sid, delete_table: dict):
-    logger.info(f"⚠️ Deletando tabela...")
+    logger.info(f"⚠️ Deletando tabela/link...")
     
     delete_table_obj = DeleteTable(**delete_table)
-    await __salvamento_agendado(sid, "receive_deleted_table", delete_table_obj)
+    await __salvamento_agendado(sid, "receive_deleted_element", delete_table_obj)
 
 async def update_table_atributes(sid, updated_table: dict):
     logger.info(f"🛠️ Atualizando tabela...")
