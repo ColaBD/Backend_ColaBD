@@ -33,20 +33,20 @@ class TableLabelAttrs(BaseModel):
     fontWeight: Optional[str] = None
     fill: Optional[str] = None
 
-class RowNameAttr(BaseModel):
-    text: str
-    fontSize: Optional[int] = None
-    fill: Optional[str] = None
+# class RowNameAttr(BaseModel):
+#     text: str
+#     fontSize: Optional[int] = None
+#     fill: Optional[str] = None
 
-class RowTypeAttr(BaseModel):
-    text: str
-    fontSize: Optional[int] = None
-    fill: Optional[str] = None
+# class RowTypeAttr(BaseModel):
+#     text: str
+#     fontSize: Optional[int] = None
+#     fill: Optional[str] = None
 
 
-class RowMetaAttr(BaseModel):
-    pk: bool
-    fk: bool
+# class RowMetaAttr(BaseModel):
+#     pk: bool
+#     fk: bool
 
 class TableAttrs(BaseModel):
     label: TableLabelAttrs
@@ -76,25 +76,16 @@ class Label(BaseModel):
     attrs: LinkLabelAttrs
     position: Optional[int] = None
 
-class LinkAttrs(BaseModel):
-    connection: Optional[Dict[str, Any]] = None
-    marker_source: Optional[Dict[str, Any]] = None
-    marker_target: Optional[Dict[str, Any]] = None
-
-class LinkRouter(BaseModel):
-    name: str
-
-class LinkConnector(BaseModel):
-    name: str
+# class LinkAttrs(BaseModel):
+#     connection: Optional[Dict[str, Any]] = None
+#     marker_source: Optional[Dict[str, Any]] = None
+#     marker_target: Optional[Dict[str, Any]] = None
 
 class LinkTable(BaseTable):
     type: str = "link"
     source: LinkEnd
     target: LinkEnd
-    router: Optional[LinkRouter] = None
-    connector: Optional[LinkConnector] = None
     labels: list[Label] = []
-    attrs: Optional[LinkAttrs] = None
     
 class SchemaUpdates(BaseModel):
     cells: list[dict[str, Any]] = Field(default_factory=list)

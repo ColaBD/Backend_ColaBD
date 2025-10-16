@@ -3,7 +3,7 @@ import socketio
 import logging
 
 from app.core.auth import get_current_user_WS
-from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, MoveTable, BaseTable, UpdateTable
+from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseTable, UpdateTable
 from app.services.module_schema.service_schema import ServiceSchema
 from app.services.module_websocket.service_websocket import ServiceWebsocket
 
@@ -16,7 +16,6 @@ user_sid_schemaId: dict[str, str] = {}
 origins = [
   "http://localhost:4200",
   "https://colabd.onrender.com",
-  "https://backend-colabd.onrender.com"
 ]
 
 sio = socketio.AsyncServer(
@@ -56,11 +55,16 @@ async def connect(sid, environ, auth):
 
     logger.info(f"✅ Novo usuário conectado com sid {sid}")
 
-async def create_table(sid, new_table: dict):
+async def create_table(sid, new_element: dict):
     logger.info(f"📦 Criando tabela/link...")
     
-    new_table_obj = CreateTable(**new_table)
-    await __salvamento_agendado(sid, "receive_new_element", new_table_obj)
+    if(new_element["type"] == "standard.Rectangle"):
+        new_element_obj = CreateTable(**new_element)
+    
+    elif(new_element["type"] == "standard.Link"):
+        new_element_obj = LinkTable(**new_element)
+        
+    await __salvamento_agendado(sid, "receive_new_element", new_element_obj)
 
 async def delete_table(sid, delete_table: dict):
     logger.info(f"⚠️ Deletando tabela/link...")

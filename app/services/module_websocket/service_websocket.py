@@ -25,7 +25,7 @@ class ServiceWebsocket:
         self.pending_updates[self.schema_id].cells = cells_dict["data"]["cells"].copy()
             
         
-    def __manipulate_create_element(self, received_data: CreateTable):
+    def __manipulate_create_element(self, received_data: BaseTable):
         self.pending_updates[self.schema_id].cells.append(received_data.model_dump())
     
     def __manipulate_delete_element(self, received_data: DeleteTable):
@@ -57,7 +57,7 @@ class ServiceWebsocket:
                 break
         
     def __preprocess_schema_received_data(self, received_data: BaseTable):
-        if (isinstance(received_data, CreateTable)):
+        if (isinstance(received_data, CreateTable) or isinstance(received_data, LinkTable)):
             self.__manipulate_create_element(received_data)
             
         elif (isinstance(received_data, DeleteTable)):
