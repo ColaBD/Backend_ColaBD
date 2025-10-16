@@ -21,7 +21,7 @@ router = APIRouter(
 
 
 class GenerateSqlRequest(BaseModel):
-    schema: str
+    schema_data: str
     sgbd: str
 
 
@@ -54,7 +54,7 @@ async def generate_sql(payload: GenerateSqlRequest):
         if not groq_api_key:
             raise HTTPException(status_code=500, detail="GROQ_API_KEY não configurada")
 
-        prompt = _build_groq_prompt(base_prompt, payload.schema, payload.sgbd)
+        prompt = _build_groq_prompt(base_prompt, payload.schema_data, payload.sgbd)
 
         # Provide explicit httpx.Client to avoid SDK constructing one with unsupported 'proxies' kwarg
         http_client = httpx.Client()

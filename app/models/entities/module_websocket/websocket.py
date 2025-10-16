@@ -74,7 +74,7 @@ class LinkLabelAttrs(BaseModel):
 
 class Label(BaseModel):
     attrs: LinkLabelAttrs
-    position: Optional[int] = None
+    position: Optional[float] = None
 
 # class LinkAttrs(BaseModel):
 #     connection: Optional[Dict[str, Any]] = None
