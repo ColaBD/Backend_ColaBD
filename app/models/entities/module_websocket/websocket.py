@@ -76,16 +76,20 @@ class Label(BaseModel):
     attrs: LinkLabelAttrs
     position: Optional[float] = None
 
-# class LinkAttrs(BaseModel):
-#     connection: Optional[Dict[str, Any]] = None
-#     marker_source: Optional[Dict[str, Any]] = None
-#     marker_target: Optional[Dict[str, Any]] = None
+class LinkAttrs(BaseModel):
+    connection: Optional[Dict[str, Any]] = Field(None, alias=".connection")
+    marker_source: Optional[Dict[str, Any]] = Field(None, alias=".marker-source")
+    marker_target: Optional[Dict[str, Any]] = Field(None, alias=".marker-target")
+    
+class Config: #classe própria do pydntic que permite configurar o comportamento do modelo
+    populate_by_name = True
 
 class LinkTable(BaseTable):
     type: str = "link"
     source: LinkEnd
     target: LinkEnd
     labels: list[Label] = []
+    attrs: LinkAttrs
     
 class SchemaUpdates(BaseModel):
     cells: list[dict[str, Any]] = Field(default_factory=list)
