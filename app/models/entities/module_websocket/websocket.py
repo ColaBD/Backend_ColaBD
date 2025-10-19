@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
+from datetime import datetime, timedelta
 
 class BaseElement(BaseModel):
     id: str
@@ -95,3 +96,42 @@ class LinkTable(BaseElement):
 class SchemaUpdates(BaseModel):
     cells: list[dict[str, Any]] = Field(default_factory=list)
     task: Any | None = None
+
+
+class Lock(BaseModel):
+    """Modelo para rastrear locks de elementos em tempo real."""
+    element_id: str
+    user_id: str
+    schema_id: str
+    locked_at: datetime = Field(default_factory=datetime.utcnow)
+    expires_at: datetime
+    
+    class Config:
+        arbitrary_types_allowed = True
+    
+    def is_expired(self) -> bool:
+        """Verifica se o lock expirou."""
+        return datetime.utcnow() > self.expires_at
+    
+    def refresh(self, ttl_seconds: int = 30) -> None:
+        """Renova o lock com novo tempo de expiração."""
+        self.locked_at = datetime.utcnow()
+        self.expires_at = datetime.utcnow() + timedelta(seconds=ttl_seconds)
+
+
+class LockResponse(BaseModel):
+    """Response para operações de lock."""
+    success: bool
+    element_id: str
+    user_id: str
+    locked_by_user: bool
+    message: str
+    expires_at: datetime | None = None
+
+
+class LockedElement(BaseModel):
+    """Informação de elemento bloqueado para enviar ao cliente."""
+    element_id: str
+    user_id: str
+    locked_by_user: bool
+    expires_at: datetime | None = None
