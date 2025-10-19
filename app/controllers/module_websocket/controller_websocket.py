@@ -3,7 +3,7 @@ import socketio
 import logging
 
 from app.core.auth import get_current_user_WS
-from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseTable, UpdateTable
+from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseElement, TextUpdateLinkLabelAttrs, UpdateTable
 from app.services.module_schema.service_schema import ServiceSchema
 from app.services.module_websocket.service_websocket import ServiceWebsocket
 
@@ -23,7 +23,7 @@ sio = socketio.AsyncServer(
     cors_allowed_origins=origins
 )
 
-async def __salvamento_agendado(sid, channel_emit: str, data: BaseTable):    
+async def __salvamento_agendado(sid, channel_emit: str, data: BaseElement):    
     schema_id = user_sid_schemaId[sid]
     await service_websocket.salvamento_agendado(data)
     
@@ -73,9 +73,14 @@ async def delete_table(sid, delete_table: dict):
     await __salvamento_agendado(sid, "receive_deleted_element", delete_table_obj)
 
 async def update_table_atributes(sid, updated_table: dict):
-    logger.info(f"🛠️ Atualizando tabela...")
+    logger.info(f"🛠️ Atualizando tabela/link...")
     
-    updated_table_obj = UpdateTable(**updated_table)
+    if(updated_table["type"] == "standard.Rectangle"):
+        updated_table_obj = UpdateTable(**updated_table)
+    
+    elif(updated_table["type"] == "standard.Link"):
+        updated_table_obj = TextUpdateLinkLabelAttrs(**updated_table)
+
     await __salvamento_agendado(sid, "receive_updated_table", updated_table_obj)
 
 async def move_table(sid, moved_table: dict):

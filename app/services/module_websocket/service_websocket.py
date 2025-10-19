@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseTable, SchemaUpdates, UpdateTable
+from app.models.entities.module_websocket.websocket import CreateTable, DeleteTable, LinkTable, MoveTable, BaseElement, SchemaUpdates, TextUpdateLinkLabelAttrs, UpdateTable
 from app.models.entities.module_schema.update_schema import UpdateSchemaData
 from app.services.module_schema.service_schema import ServiceSchema
 
@@ -25,7 +25,7 @@ class ServiceWebsocket:
         self.pending_updates[self.schema_id].cells = cells_dict["data"]["cells"].copy()
             
         
-    def __manipulate_create_element(self, received_data: BaseTable):
+    def __manipulate_create_element(self, received_data: BaseElement):
         self.pending_updates[self.schema_id].cells.append(received_data.model_dump())
     
     def __manipulate_delete_element(self, received_data: DeleteTable):
@@ -40,12 +40,13 @@ class ServiceWebsocket:
                 
         self.pending_updates[self.schema_id].cells.pop(index_exclusao)
     
-    def __manipulate_update_table(self, received_data: UpdateTable):
+    def __manipulate_update_table(self, received_data: UpdateTable | TextUpdateLinkLabelAttrs):
         for item in self.pending_updates[self.schema_id].cells:
             if(item["id"] == received_data.id):
-                if ("attrs" not in item):
-                    item["attrs"] = {}
-                    
+                if (isinstance(received_data, TextUpdateLinkLabelAttrs)):
+                    item["labels"][0]["attrs"]["text"]["text"] = received_data.text
+                    break
+                
                 item["attrs"] = received_data.attrs
                 break
     
@@ -56,11 +57,11 @@ class ServiceWebsocket:
                 item["position"]["y"] = received_data.position.y
                 break
         
-    def __preprocess_schema_received_data(self, received_data: BaseTable):
+    def __preprocess_schema_received_data(self, received_data: BaseElement):
         if (isinstance(received_data, CreateTable) or isinstance(received_data, LinkTable)):
             self.__manipulate_create_element(received_data)
             
-        elif (isinstance(received_data, DeleteTable)):
+        elif (isinstance(received_data, DeleteTable) or isinstance(received_data, TextUpdateLinkLabelAttrs)):
             self.__manipulate_delete_element(received_data)
             
         elif (isinstance(received_data, UpdateTable)):
@@ -69,7 +70,7 @@ class ServiceWebsocket:
         elif (isinstance(received_data, MoveTable)):
             self.__manipulate_move_table(received_data)
 
-    async def salvamento_agendado(self, received_data: BaseTable):       
+    async def salvamento_agendado(self, received_data: BaseElement):       
         if (self.schema_id not in self.pending_updates):
             self.pending_updates[self.schema_id] = SchemaUpdates()
             

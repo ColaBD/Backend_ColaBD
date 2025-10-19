@@ -1,9 +1,10 @@
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
 
-class BaseTable(BaseModel):
+class BaseElement(BaseModel):
     id: str
-
+    class Config: #classe própria do pydntic que permite configurar o comportamento do modelo
+        extra = "ignore"  # Ignora campos extras não definidos no modelo
 class Position(BaseModel):
     x: int
     y: int
@@ -12,19 +13,19 @@ class Size(BaseModel):
     width: int
     height: int
 
-class CreateTable(BaseTable):
+class CreateTable(BaseElement):
     type: str = "standard.Rectangle"
     position: Position
     size: Size
     attrs: Dict[str, Any] 
     
-class UpdateTable(BaseTable):
+class UpdateTable(BaseElement):
     attrs: Dict[str, Any]  
 
-class MoveTable(BaseTable):
+class MoveTable(BaseElement):
     position: Position
 
-class DeleteTable(BaseTable):
+class DeleteTable(BaseElement):
     pass
 
 class TableLabelAttrs(BaseModel):
@@ -61,6 +62,9 @@ class LinkLabelText(BaseModel):
     fontWeight: Optional[str] = None
     fill: Optional[str] = None
 
+class TextUpdateLinkLabelAttrs(BaseElement):
+    text: str 
+    
 class LinkLabelRect(BaseModel):
     fill: Optional[str] = None
     stroke: Optional[str] = None
@@ -80,11 +84,8 @@ class LinkAttrs(BaseModel):
     connection: Optional[Dict[str, Any]] = Field(None, alias=".connection")
     marker_source: Optional[Dict[str, Any]] = Field(None, alias=".marker-source")
     marker_target: Optional[Dict[str, Any]] = Field(None, alias=".marker-target")
-    
-class Config: #classe própria do pydntic que permite configurar o comportamento do modelo
-    populate_by_name = True
 
-class LinkTable(BaseTable):
+class LinkTable(BaseElement):
     type: str = "link"
     source: LinkEnd
     target: LinkEnd
