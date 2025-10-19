@@ -7,12 +7,14 @@ from app.models.entities.module_websocket.websocket import CreateTable, DeleteTa
 from app.services.module_schema.service_schema import ServiceSchema
 from app.services.module_websocket.service_websocket import ServiceWebsocket
 from app.services.module_websocket.service_lock import ServiceLock
+from app.services.module_websocket.service_cursor import ServiceCursor
 
 logger = logging.getLogger(__name__)
 
 service_schema = ServiceSchema()
 service_websocket = ServiceWebsocket(service_schema=service_schema)
 service_lock = ServiceLock()
+service_cursor = ServiceCursor()
 user_sid_schemaId: dict[str, str] = {}
 
 origins = [
@@ -42,6 +44,8 @@ def __create_dinamic_endpoint_name(schema_id):
     sio.on(f"lock_element_{schema_id}")(lock_element)
     sio.on(f"unlock_element_{schema_id}")(unlock_element)
     sio.on(f"get_locked_elements_{schema_id}")(get_locked_elements)
+    sio.on(f"cursor_move_{schema_id}")(cursor_move)
+    sio.on(f"cursor_leave_{schema_id}")(cursor_leave)
     
 @sio.event
 async def connect(sid, environ, auth):
@@ -172,7 +176,53 @@ async def get_locked_elements(sid, data: dict):
         },
         to=sid
     )
+
+async def cursor_move(sid, data: dict):
+    """Event handler for cursor position update."""
+    schema_id = user_sid_schemaId.get(sid)
+    user_id = data.get("user_id")
+    user_name = data.get("user_name")
+    x = data.get("x")
+    y = data.get("y")
+    color = data.get("color")
     
+    if not all([schema_id, user_id, user_name, x is not None, y is not None, color]):
+        logger.warning(f"Invalid cursor move request - missing required fields")
+        return
+    
+    logger.debug(f"Cursor move for user {user_id} in schema {schema_id}: ({x}, {y})")
+    
+    # Update cursor position
+    cursor_data = service_cursor.update_cursor(user_id, user_name, x, y, color, schema_id)
+    
+    # Broadcast to other clients in the same schema
+    await sio.emit(
+        f"cursor_update_{schema_id}",
+        cursor_data,
+        skip_sid=sid
+    )
+
+async def cursor_leave(sid, data: dict):
+    """Event handler for when user leaves the diagram."""
+    schema_id = user_sid_schemaId.get(sid)
+    user_id = data.get("user_id")
+    
+    if not schema_id or not user_id:
+        logger.warning(f"Invalid cursor leave request")
+        return
+    
+    logger.debug(f"Cursor leave for user {user_id} in schema {schema_id}")
+    
+    # Remove cursor
+    service_cursor.remove_cursor(user_id, schema_id)
+    
+    # Broadcast to other clients
+    await sio.emit(
+        f"cursor_leave_{schema_id}",
+        {"user_id": user_id},
+        skip_sid=sid
+    )
+
 @sio.event
 async def disconnect(sid):
     schema_id = user_sid_schemaId.get(sid)
@@ -180,16 +230,25 @@ async def disconnect(sid):
     if schema_id:
         user_id = service_websocket.user_id
         
-        # Libera todos os locks do usuário
+        # Release all locks for this user
         released_elements = await service_lock.release_all_user_locks(user_id, schema_id)
         
-        # Notifica demais clientes sobre elementos desbloqueados
+        # Notify other clients about released locks
         if released_elements:
             for element_id in released_elements:
                 await sio.emit(
                     f"element_unlocked_{schema_id}",
                     {"element_id": element_id, "reason": "user_disconnected"}
                 )
+        
+        # Remove cursor for this user
+        service_cursor.remove_user_all_cursors(user_id, schema_id)
+        
+        # Notify other clients about cursor removal
+        await sio.emit(
+            f"cursor_leave_{schema_id}",
+            {"user_id": user_id}
+        )
     
     user_sid_schemaId.pop(sid, None)
     logger.info(f"Client disconnected: {sid}")   
