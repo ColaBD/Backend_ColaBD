@@ -28,7 +28,7 @@ async def __salvamento_agendado(sid, channel_emit: str, data: BaseElement):
     await service_websocket.salvamento_agendado(data)
     
     full_name_channel_emit = f"{channel_emit}_{schema_id}"
-    logger.info(f"🚀 dados sendo emitidos pelo canal {full_name_channel_emit}...      -----       {data}")
+    logger.info(f"🚀 dados sendo emitidos pelo canal {full_name_channel_emit}...")
     
     await sio.emit(full_name_channel_emit, data.model_dump(), skip_sid=sid)# -> colocar skip_sid=sid como ultimo parametro para quem enviou a atualização não receber a mensagem
 
