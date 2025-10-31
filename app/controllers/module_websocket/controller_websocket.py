@@ -16,6 +16,7 @@ service_websocket = ServiceWebsocket(service_schema=service_schema)
 service_lock = ServiceLock()
 service_cursor = ServiceCursor()
 user_sid_schemaId: dict[str, str] = {}
+user_sid_userId: dict[str, str] = {}
 
 origins = [
   "http://localhost:4200",
@@ -29,7 +30,8 @@ sio = socketio.AsyncServer(
 
 async def __salvamento_agendado(sid, channel_emit: str, data: BaseElement):    
     schema_id = user_sid_schemaId[sid]
-    await service_websocket.salvamento_agendado(data)
+    user_id = user_sid_userId[sid]
+    await service_websocket.manipulate_received_data(data, schema_id, user_id)
     
     full_name_channel_emit = f"{channel_emit}_{schema_id}"
     logger.info(f"Data being emitted through channel {full_name_channel_emit}...")
@@ -54,13 +56,12 @@ async def connect(sid, environ, auth):
 
     user_id: str = get_current_user_WS(token)["id"]
     
-    service_websocket.user_id = user_id
-    service_websocket.schema_id = schema_id
     user_sid_schemaId[sid] = schema_id
+    user_sid_userId[sid] = user_id
     
     __create_dinamic_endpoint_name(schema_id)
 
-    await service_websocket.initialie_cells()
+    await service_websocket.initialie_cells(schema_id, user_id)
 
     logger.info(f"New user connected with sid {sid}")
 
@@ -251,4 +252,5 @@ async def disconnect(sid):
         )
     
     user_sid_schemaId.pop(sid, None)
+    user_sid_userId.pop(sid)
     logger.info(f"Client disconnected: {sid}")   
