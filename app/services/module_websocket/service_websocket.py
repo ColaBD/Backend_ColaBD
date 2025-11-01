@@ -9,24 +9,34 @@ logger = logging.getLogger(__name__)
 class ServiceWebsocket:
     def __init__(self, service_schema: ServiceSchema):
         self.pending_updates: dict[str, SchemaUpdates] = {}
+        self.service_schema = service_schema
+        self._locks: dict[str, asyncio.Lock] = {}       
+        
+    def _get_lock(self, schema_id: str) -> asyncio.Lock:
+        if schema_id not in self._locks:
+            self._locks[schema_id] = asyncio.Lock()
 
-        self.service_schema = service_schema       
+        return self._locks[schema_id]
         
     async def initialie_cells(self, schema_id: str, user_id: str):       
         cells_from_db = await self.service_schema.get_schema_with_cells(schema_id, user_id)
         cells_dict = cells_from_db.model_dump()
 
-        if (schema_id not in self.pending_updates or not cells_dict["success"]):
-            self.pending_updates[schema_id] = SchemaUpdates(cells=[], task=None)
-            return
-            
-        self.pending_updates[schema_id].cells = cells_dict["data"]["cells"].copy()
+        lock = self._get_lock(schema_id)
+        async with lock:
+            if (schema_id not in self.pending_updates or not cells_dict["success"]):
+                self.pending_updates[schema_id] = SchemaUpdates(cells=[], task=None)
+                return
+                
+            self.pending_updates[schema_id].cells = cells_dict["data"]["cells"].copy()
             
         
     def __manipulate_create_element(self, schema_id: str, received_data: BaseElement):
+        """Adiciona elemento às células. NOTA: Deve ser chamado dentro de um contexto protegido por lock."""
         self.pending_updates[schema_id].cells.append(received_data.model_dump())
     
     def __manipulate_delete_element(self, schema_id: str, received_data: DeleteTable):
+        """Remove elemento das células. NOTA: Deve ser chamado dentro de um contexto protegido por lock."""
         if(len(self.pending_updates[schema_id].cells) == 0):
             return
         
@@ -39,6 +49,7 @@ class ServiceWebsocket:
         self.pending_updates[schema_id].cells.pop(index_exclusao)
     
     def __manipulate_update_table(self, schema_id: str, received_data: UpdateTable | TextUpdateLinkLabelAttrs):
+        """Atualiza atributos de elemento. NOTA: Deve ser chamado dentro de um contexto protegido por lock."""
         for item in self.pending_updates[schema_id].cells:
             if(item["id"] == received_data.id):
                 if (isinstance(received_data, TextUpdateLinkLabelAttrs)):
@@ -49,6 +60,7 @@ class ServiceWebsocket:
                 break
     
     def __manipulate_move_table(self, schema_id: str, received_data: MoveTable):
+        """Move elemento. NOTA: Deve ser chamado dentro de um contexto protegido por lock."""
         for item in self.pending_updates[schema_id].cells:
             if(item["id"] == received_data.id):
                 item["position"]["x"] = received_data.position.x
@@ -69,27 +81,37 @@ class ServiceWebsocket:
             self.__manipulate_move_table(schema_id, received_data)
 
     async def manipulate_received_data(self, received_data: BaseElement, schema_id: str, user_id: str):       
-        if (schema_id not in self.pending_updates):
-            self.pending_updates[schema_id] = SchemaUpdates()
-            
-        self.__preprocess_schema_received_data(schema_id, received_data) 
-            
-        task = self.pending_updates[schema_id].task 
-        if (task):
-            logger.info(f"---- Cancelando o salvamento, porque o schema foi alterado novamente ----")
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+        lock = self._get_lock(schema_id)
+        task_to_cancel = None
+        
+        async with lock:
+            if (schema_id not in self.pending_updates):
+                self.pending_updates[schema_id] = SchemaUpdates()
 
-        # cria um multiprocess em paralelo para rodar o metodo salvamento_com_atraso por schema
-        self.pending_updates[schema_id].task = asyncio.create_task(self.scheduled_save(schema_id, user_id))
+            self.__preprocess_schema_received_data(schema_id, received_data) 
+
+            task = self.pending_updates[schema_id].task 
+            if (task):
+                task_to_cancel = task
+                task.cancel()
+
+            self.pending_updates[schema_id].task = asyncio.create_task(self.scheduled_save(schema_id, user_id))
+        
+        if task_to_cancel:
+            logger.info(f"---- Cancelando o salvamento do schema {schema_id}, porque foi alterado novamente ----")
+            try:
+                await task_to_cancel
+            except asyncio.CancelledError:
+                logger.info(f"Salvamento do schema {schema_id} cancelado com sucesso")
+            except Exception as e:
+                logger.warning(f"Erro ao cancelar salvamento do schema {schema_id}: {e}")
 
     async def scheduled_save(self, schema_id: str, user_id: str):
         try:
-            #enquanto não é usado redis deve esperar um determinado tempo para persistir no banco, porém caso alguem entre nesse intervalo de tempo ficará com as tabelas desatualizadas
-            #quando começar a usar o redis criar um worker que irá fazer essa comunicação de pegar os dados do redis e mandar para o supabase
+            # Enquanto não é usado redis deve esperar um determinado tempo para persistir no banco,
+            # porém caso alguém entre nesse intervalo de tempo ficará com as tabelas desatualizadas.
+            # Quando começar a usar o redis criar um worker que irá fazer essa comunicação
+            # de pegar os dados do redis e mandar para o supabase
             await asyncio.sleep(2) 
 
             if(schema_id == None or schema_id.strip() == ""):
@@ -99,11 +121,20 @@ class ServiceWebsocket:
             if(user_id == None or user_id.strip() == ""):
                 logger.error("User ID é None, não é possível salvar o schema.")
                 return
+
+            lock = self._get_lock(schema_id)
+            async with lock:
+                if schema_id not in self.pending_updates:
+                    logger.warning(f"Schema {schema_id} removido antes do salvamento")
+                    return
+                cells_copy = self.pending_updates[schema_id].cells.copy()
             
-            update_data = UpdateSchemaData(schema_id, self.pending_updates[schema_id].cells)
+            update_data = UpdateSchemaData(schema_id, cells_copy)
             await self.service_schema.update_schema(update_data, user_id)
             
             logger.info(f"Schema {schema_id} salvo no banco!")
         except asyncio.CancelledError:
-            logger.info(f"Operação cancelada, pois o schema foi alterado")
+            logger.info(f"Operação cancelada, pois o schema {schema_id} foi alterado novamente")
             return
+        except Exception as e:
+            logger.error(f"Erro ao salvar schema {schema_id}: {e}", exc_info=True)

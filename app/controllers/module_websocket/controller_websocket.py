@@ -28,7 +28,7 @@ sio = socketio.AsyncServer(
     cors_allowed_origins=origins
 )
 
-async def __salvamento_agendado(sid, channel_emit: str, data: BaseElement):    
+async def __scheduled_save(sid, channel_emit: str, data: BaseElement):    
     schema_id = user_sid_schemaId[sid]
     user_id = user_sid_userId[sid]
     await service_websocket.manipulate_received_data(data, schema_id, user_id)
@@ -74,13 +74,13 @@ async def create_table(sid, new_element: dict):
     elif(new_element["type"] == "standard.Link"):
         new_element_obj = LinkTable(**new_element)
         
-    await __salvamento_agendado(sid, "receive_new_element", new_element_obj)
+    await __scheduled_save(sid, "receive_new_element", new_element_obj)
 
 async def delete_table(sid, delete_table: dict):
     logger.info(f"Deleting table/link...")
     
     delete_table_obj = DeleteTable(**delete_table)
-    await __salvamento_agendado(sid, "receive_deleted_element", delete_table_obj)
+    await __scheduled_save(sid, "receive_deleted_element", delete_table_obj)
 
 async def update_table_atributes(sid, updated_table: dict):
     logger.info(f"Updating table/link...")
@@ -91,19 +91,19 @@ async def update_table_atributes(sid, updated_table: dict):
     elif(updated_table["type"] == "standard.Link"):
         updated_table_obj = TextUpdateLinkLabelAttrs(**updated_table)
 
-    await __salvamento_agendado(sid, "receive_updated_table", updated_table_obj)
+    await __scheduled_save(sid, "receive_updated_table", updated_table_obj)
 
 async def move_table(sid, moved_table: dict):
     logger.info(f"Moving table...")
     
     moved_table_obj = MoveTable(**moved_table)
-    await __salvamento_agendado(sid, "receive_moved_table", moved_table_obj)
+    await __scheduled_save(sid, "receive_moved_table", moved_table_obj)
 
 async def lock_element(sid, data: dict):
     """Event handler para adquirir lock de um elemento."""
     element_id = data.get("element_id")
     schema_id = user_sid_schemaId.get(sid)
-    user_id = service_websocket.user_id
+    user_id = user_sid_userId.get(sid)
     
     if not element_id or not schema_id:
         logger.warning(f"Invalid lock request - element_id: {element_id}, schema_id: {schema_id}")
@@ -137,7 +137,7 @@ async def unlock_element(sid, data: dict):
     """Event handler para liberar lock de um elemento."""
     element_id = data.get("element_id")
     schema_id = user_sid_schemaId.get(sid)
-    user_id = service_websocket.user_id
+    user_id = user_sid_userId.get(sid)
     
     if not element_id or not schema_id:
         logger.warning(f"Invalid unlock request")
@@ -229,7 +229,7 @@ async def disconnect(sid):
     schema_id = user_sid_schemaId.get(sid)
     
     if schema_id:
-        user_id = service_websocket.user_id
+        user_id = user_sid_userId.get(sid)
         
         # Release all locks for this user
         released_elements = await service_lock.release_all_user_locks(user_id, schema_id)
