@@ -310,3 +310,12 @@ class RepositorySchema:
         
         except Exception as e:
             return Response(data=str(e), success=False)
+
+    async def get_users_by_schema(self, schema_id: str):
+        try:
+            supabase = self._get_supabase_client()
+            data = supabase.from_('user_schema').select('id, user_id, user(id, name, email)').eq("schema_id", schema_id).execute()
+            return Response(data=data.data or [], success=True)
+
+        except Exception as e:
+            return Response(data=str(e), success=False)

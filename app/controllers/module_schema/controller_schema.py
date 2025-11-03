@@ -52,8 +52,18 @@ async def get_schema_by_id(schema_id: str, current_user_id: str = Depends(get_cu
     result = await service_schema.get_schema_with_cells(schema_id, current_user_id)
     
     if not result.success:
-        http_exception(result, 404)
+        http_exception(result, 500)
     
+    return Response(data=result.data, success=True)
+
+
+@router.get("/{schema_id}/collaborative", response_model=Response)
+async def get_schema_by_users(schema_id: str, current_user_id: str = Depends(get_current_user_id)):
+    result = await service_schema.get_users_by_schemas(schema_id)
+
+    if not result.success:
+        http_exception(result, 500)
+
     return Response(data=result.data, success=True)
 
 @router.post("/", response_model=Response)

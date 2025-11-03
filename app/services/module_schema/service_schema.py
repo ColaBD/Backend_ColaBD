@@ -325,3 +325,15 @@ class ServiceSchema:
         except Exception as e:
             logger.error(f"Service: Erro ao vincular usuário: {str(e)}")
             return Response(data=str(e), success=False)
+
+
+    async def get_users_by_schemas(self, schema_id: str) -> Response:
+        user_schemas_result = await self.repo_schema.get_users_by_schema(schema_id)
+
+        schema_details_list = [
+            result for result in user_schemas_result.data
+            if not isinstance(result, Exception)
+        ]
+
+        logger.info(f"Service: Returning {len(schema_details_list)} schema details")
+        return Response(data=schema_details_list, success=True)
