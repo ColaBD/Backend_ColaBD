@@ -61,58 +61,39 @@ class ServiceSchema:
             
         except Exception as e:
             return Response(data=str(e), success=False)
-    
+
     async def get_schemas_by_user(self, user_id: str) -> Response:
         try:
             logger.info(f"Service: Getting schemas for user {user_id}")
 
-            result = await self.repo_schema.get_by_user_id(user_id)
+            result = await self.repo_schema.get_schemas_by_user_id(user_id)
+
             if not result.success:
                 return result
 
-            schema_ids = [user_schema["schema_id"] for user_schema in result.data]
-            logger.info(f"Service: Found {len(schema_ids)} schemas for user")
-            
-            if not schema_ids:
-                return Response(data=[], success=True)
-
-            schemas_result = await self.repo_schema.get_schemas_by_ids(schema_ids)
-            if not schemas_result.success:
-                logger.error(f"Service: Error getting schema details: {schemas_result.data}")
-                return Response(data=[], success=True)  # Return empty instead of error
-            
-            # Process all schemas in parallel for better performance
-            schema_details_list = await asyncio.gather(
-                *[self.process_schema(schema_data) for schema_data in schemas_result.data],
-                return_exceptions=True
-            )
-
-            schema_details_list = [
-                result for result in schema_details_list 
-                if not isinstance(result, Exception)
-            ]
-            
+            schema_details_list = result.data or []
             logger.info(f"Service: Returning {len(schema_details_list)} schema details")
+
             return Response(data=schema_details_list, success=True)
-            
+
         except Exception as e:
             logger.error(f"Service: Error in get_schemas_by_user: {str(e)}")
             return Response(data=str(e), success=False)
-            
-    async def process_schema(self, schema_data):
-        schema_id = schema_data["id"]
 
-        signed_image_url = None
-        try:
-
-            image_url_result = await self.repo_schema.get_schema_image_signed_url(schema_id)
-            if image_url_result.success and image_url_result.data:
-                signed_image_url = image_url_result.data
-        except:
-            pass  
-
-        schema_data["signed_image_url"] = signed_image_url
-        return schema_data
+    # async def process_schema(self, schema_data):
+    #     schema_id = schema_data["id"]
+    #
+    #     signed_image_url = None
+    #     try:
+    #
+    #         image_url_result = await self.repo_schema.get_schema_image_signed_url(schema_id)
+    #         if image_url_result.success and image_url_result.data:
+    #             signed_image_url = image_url_result.data
+    #     except:
+    #         pass
+    #
+    #     schema_data["signed_image_url"] = signed_image_url
+    #     return schema_data
     
     #refatorar essa tripa
     async def update_schema(self, update_schema_data, current_user_id: str, display_picture=None) -> Response:

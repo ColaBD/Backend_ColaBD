@@ -138,6 +138,25 @@ class RepositorySchema:
         except Exception as e:
             return Response(data=str(e), success=False)
 
+    async def get_schemas_by_user_id(self, user_id: str) -> Response:
+        try:
+            supabase = self._get_supabase_client()
+
+            data_supabase = (
+                supabase.table("user_schema")
+                .select("schema_id, schema:schema_id(*)")
+                .eq("user_id", user_id)
+                .execute()
+            )
+
+            user_schemas = data_supabase.data or []
+
+            return Response(data=user_schemas, success=True)
+
+        except Exception as e:
+            logger.error(f"Repo: Error getting schemas by user id: {str(e)}")
+            return Response(data=str(e), success=False)
+
     async def upload_schema_image(self, schema_id: str, image_file: UploadFile) -> Response:
         try:           
             logger.info(f"Repository: Starting image upload for schema {schema_id}")
