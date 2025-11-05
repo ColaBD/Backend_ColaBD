@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
 from supabase import create_client, Client
+from redis.asyncio import Redis
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ class DatabaseManager:
     _mongo_client: Optional[MongoClient] = None
     _mongo_database: Optional[Database] = None
     _supabase_client: Optional[Client] = None
+    _redis_client: Optional[Redis] = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -23,6 +25,7 @@ class DatabaseManager:
     async def initialize(self):
         await self._initialize_mongodb()
         await self._initialize_supabase()
+        await self._initialize_redis()
         logger.info("Database connections initialized successfully")
 
     async def _initialize_mongodb(self):
@@ -77,6 +80,31 @@ class DatabaseManager:
         client = self.get_supabase_client()
         return client.table(table_name)
 
+    async def _initialize_redis(self):
+        try:
+            redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+            redis_password = os.getenv('REDIS_PASSWORD', None)
+            
+            self._redis_client = Redis.from_url(
+                redis_url,
+                password=redis_password,
+                decode_responses=False,  # Recebe bytes, fazemos decode manualmente
+                encoding='utf-8'
+            )
+            
+            # Testa conexão
+            # await self._redis_client.ping()
+            # logger.info("Redis connected successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to connect to Redis: {str(e)}")
+            raise e
+    
+    def get_redis_client(self) -> Redis:
+        if self._redis_client is None:
+            raise RuntimeError("Redis client not initialized. Call initialize() first.")
+        return self._redis_client
+    
     async def close_connections(self):
         if self._mongo_client:
             self._mongo_client.close()
@@ -86,6 +114,13 @@ class DatabaseManager:
         
         # Supabase client doesn't need explicit closing
         self._supabase_client = None
+        
+        # Fecha conexão Redis
+        if self._redis_client:
+            await self._redis_client.close()
+            self._redis_client = None
+            logger.info("Redis connection closed")
+        
         logger.info("Database connections closed successfully")
 
 

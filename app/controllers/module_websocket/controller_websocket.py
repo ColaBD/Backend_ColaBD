@@ -8,11 +8,23 @@ from app.services.module_schema.service_schema import ServiceSchema
 from app.services.module_websocket.service_websocket import ServiceWebsocket
 from app.services.module_websocket.service_lock import ServiceLock
 from app.services.module_websocket.service_cursor import ServiceCursor
+from app.database.module_websocket.repository_websocket import RepositoryWebsocket
+from app.database.common.database_manager import db_manager
 
 logger = logging.getLogger(__name__)
 
 service_schema = ServiceSchema()
-service_websocket = ServiceWebsocket(service_schema=service_schema)
+# Redis repository será inicializado após db_manager.initialize()
+repository_websocket: RepositoryWebsocket = None
+service_websocket: ServiceWebsocket = None
+
+def _initialize_websocket_services():
+    """Inicializa serviços WebSocket após Redis estar disponível."""
+    global repository_websocket, service_websocket
+    if repository_websocket is None:
+        redis_client = db_manager.get_redis_client()
+        repository_websocket = RepositoryWebsocket(redis_client)
+        service_websocket = ServiceWebsocket(service_schema=service_schema, repository_websocket=repository_websocket)
 service_lock = ServiceLock()
 service_cursor = ServiceCursor()
 user_sid_schemaId: dict[str, str] = {}
@@ -31,6 +43,11 @@ sio = socketio.AsyncServer(
 async def __scheduled_save(sid, channel_emit: str, data: BaseElement):    
     schema_id = user_sid_schemaId[sid]
     user_id = user_sid_userId[sid]
+    
+    # Garante que serviços estão inicializados
+    if service_websocket is None:
+        _initialize_websocket_services()
+    
     await service_websocket.manipulate_received_data(data, schema_id, user_id)
     
     full_name_channel_emit = f"{channel_emit}_{schema_id}"
@@ -61,6 +78,10 @@ async def connect(sid, environ, auth):
     
     __create_dinamic_endpoint_name(schema_id)
 
+    # Garante que serviços estão inicializados
+    if service_websocket is None:
+        _initialize_websocket_services()
+    
     await service_websocket.initialie_cells(schema_id, user_id)
 
     logger.info(f"New user connected with sid {sid}")
