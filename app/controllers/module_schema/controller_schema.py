@@ -26,7 +26,7 @@ service_schema = ServiceSchema()
 def http_exception(result, status=500):
     raise HTTPException(detail=result.data, status_code=status)
 
-@router.get("/", response_model=Response)
+@router.get("", response_model=Response)
 async def get_all_schemas(current_user_id: str = Depends(get_current_user_id)):
     result = await service_schema.get_schemas_by_user(current_user_id)
     
@@ -66,7 +66,7 @@ async def get_schema_by_users(schema_id: str, current_user_id: str = Depends(get
 
     return Response(data=result.data, success=True)
 
-@router.post("/", response_model=Response)
+@router.post("", response_model=Response)
 async def create_schema(schema_data: CreateSchema, current_user_id: str = Depends(get_current_user_id)):
     result = await service_schema.create_schema(schema_data, current_user_id)
     
@@ -76,7 +76,7 @@ async def create_schema(schema_data: CreateSchema, current_user_id: str = Depend
     return Response(data=result.data, success=True)
 
 
-@router.patch("/", response_model=Response)
+@router.patch("", response_model=Response)
 async def vinculate_schema(schema_data: VinculateSchema, current_user_id: str = Depends(get_current_user_id)):
     """Vinculate a user to a schema by email."""
     result = await service_schema.vinculate_user_to_schema(
@@ -90,7 +90,7 @@ async def vinculate_schema(schema_data: VinculateSchema, current_user_id: str = 
 
     return Response(data=result.data, success=True)
 
-@router.put("/", response_model=Response)
+@router.put("", response_model=Response)
 async def update_schema(
     schema_id: str = Form(...),
     cells: str = Form(...),  # JSON string of cells data
