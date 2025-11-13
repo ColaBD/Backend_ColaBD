@@ -18,7 +18,7 @@ user_sid_schemaId: dict[str, str] = {}
 user_sid_userId: dict[str, str] = {}
 
 origins = [
-  "http://localhost:4200",
+  "http://localhost:4200/",
   "https://colabd.onrender.com",
 ]
 
