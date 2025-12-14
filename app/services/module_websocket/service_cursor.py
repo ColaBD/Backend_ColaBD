@@ -57,9 +57,7 @@ class ServiceCursor:
         
         cursor = CursorPosition(user_id, user_name, x, y, color)
         self._cursors[schema_id][user_id] = cursor
-        
-        logger.debug(f"Cursor updated for user {user_id} in schema {schema_id}: ({x}, {y})")
-        
+
         return cursor.to_dict()
     
     def remove_cursor(self, user_id: str, schema_id: str) -> bool:
@@ -69,7 +67,6 @@ class ServiceCursor:
         
         if user_id in self._cursors[schema_id]:
             del self._cursors[schema_id][user_id]
-            logger.info(f"Cursor removed for user {user_id} in schema {schema_id}")
             return True
         
         return False

@@ -237,9 +237,7 @@ async def cursor_move(sid, data: dict):
     if not all([schema_id, user_id, user_name, x is not None, y is not None, color]):
         logger.warning(f"Invalid cursor move request - missing required fields")
         return
-    
-    logger.debug(f"Cursor move for user {user_id} in schema {schema_id}: ({x}, {y})")
-    
+
     cursor_data = service_cursor.update_cursor(user_id, user_name, x, y, color, schema_id)
     
     await sio.emit(
@@ -257,9 +255,7 @@ async def cursor_leave(sid, data: dict):
     if not schema_id or not user_id:
         logger.warning(f"Invalid cursor leave request")
         return
-    
-    logger.debug(f"Cursor leave for user {user_id} in schema {schema_id}")
-    
+
     service_cursor.remove_cursor(user_id, schema_id)
     
     await sio.emit(

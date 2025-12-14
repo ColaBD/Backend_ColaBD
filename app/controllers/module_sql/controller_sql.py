@@ -86,7 +86,7 @@ async def generate_sql(payload: GenerateSqlRequest):
             f.write(sql_code)
 
         # Use bucket-specific key for storage operations (private bucket / RLS)
-        connection_url = (os.getenv("CONNECTION_POSTGRES_SUPABASE") or "").strip()
+        connection_url = ("https://fzemobptznamsewgljbt.supabase.co").strip()
         bucket_key = (os.getenv("SECRET_SUPABASE_BUCKET") or "").strip()
         if not connection_url or not bucket_key:
             raise HTTPException(status_code=500, detail="CONNECTION_POSTGRES_SUPABASE/SECRET_SUPABASE_BUCKET não configurados")
